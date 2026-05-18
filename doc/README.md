@@ -342,6 +342,87 @@ and a draggable timeline scrubber:
 - **Image — crossfade** — opacity-eased crossfade with a Ken-Burns zoom.
 - **Image — circular clip reveal** — animated `clipFunc` growing a circle to reveal each image.
 - **Typewriter — AI chat** — character-by-character text reveal with a blinking caret.
+- **Flex layout — auto card** — `Flex` + `Block` + `Image` auto-flow: text rewraps under the image as the card animates width.
+- **Flex — typewriter pushes image** — text typing inside a `Block` grows the column; the image below slides down each frame as the text height changes.
+- **Flex — row of growing images** — four `Image`s in a row take turns animating `flexGrow` from 1 → 4 → 1, demonstrating that any flex attr can be mutated per frame.
+- **Flex — feature showcase** — four labeled sections cycling `justifyContent`, `alignItems`, per-child `flexGrow` weights, and `gap`, all driven by `setAttr` inside `register`.
+
+## Flex layout
+
+`@konva-motion/core` ships `Flex`, `Block`, and `Image` — three Konva.Group
+subclasses wired to a synchronous flexbox engine
+([flexily](https://github.com/beorn/flexily)). When a `Flex` sits inside a
+`Sequence`, layout is recomputed on every frame, so animated `width`, `gap`,
+or text changes reflow without any extra wiring.
+
+```ts
+import { Flex, Block, Image } from "@konva-motion/core";
+import Konva from "konva";
+
+const card = new Flex({
+  x: 40, y: 40,
+  width: 360,
+  flexDirection: "column",
+  gap: 12,
+});
+
+const body = new Block({
+  width: "100%",
+  flexDirection: "column",
+  padding: 16,
+  gap: 10,
+  background: { gradient: { type: "linear", stops: [[0, "#1f2937"], [1, "#111827"]], angle: 135 } },
+  borderSize: 1,
+  borderColor: "#374151",
+  cornerRadius: 14,
+  shadow: { color: "#000", blur: 24, offsetY: 8, opacity: 0.45 },
+});
+
+body.add(new Image({ width: "100%", height: 160, src: "/cover.jpg", objectFit: "cover", cornerRadius: 10 }));
+body.add(new Konva.Text({ text: "Headline", fontSize: 22, fontStyle: "bold", fill: "#f9fafb" }));
+body.add(new Konva.Text({ text: "Body copy that rewraps as the card resizes.", fontSize: 14, fill: "#d1d5db" }));
+
+card.add(body);
+main.add(card);
+```
+
+- **`Flex(config)`** — `flexDirection`, `justifyContent`, `alignItems`,
+  `gap`, `padding`. Sizes accept `number` or CSS-style `"50%"`.
+- **`Block(config)`** — everything `Flex` accepts, plus visual props:
+  `background` (color string or `{ gradient }`), `borderSize`, `borderColor`,
+  `borderStyle: "solid" | "dashed"`, `shadow`, `cornerRadius`.
+- **`Image(config)`** — fixed-box image with `objectFit`
+  (`"cover" | "contain" | "fill" | "none"`), `objectPosition`, and
+  `cornerRadius`. `src` accepts an `HTMLImageElement` or a URL string.
+- **Child props** on any flex child: `flexGrow`, `flexShrink`, `flexBasis`,
+  `alignSelf`, `margin`.
+- **Auto-measure** — raw `Konva.Text` and `Konva.Image` children of `Flex`
+  contribute their intrinsic size to layout. Text wraps to whatever width
+  the flex algorithm assigns it, so it never overlaps siblings.
+
+### Animating layout
+
+Inside `Sequence.register`, just mutate any flex attr — `width`, `gap`,
+`flexGrow`, `justifyContent`, `alignItems`, the text content itself, etc.
+The next tick recomputes layout, so positions and sizes reflow without you
+calling anything explicitly:
+
+```ts
+main.register((frame) => {
+  // animate the card's width — text rewraps, image below slides as needed
+  card.width(320 + 240 * (0.5 - 0.5 * Math.cos(frame / 90 * Math.PI * 2)));
+
+  // change a child's flex weight — siblings redistribute on the next draw
+  images[active]?.setAttr("flexGrow", 4);
+
+  // edit text — the column grows and pushes later children down
+  title.text(`Frame ${frame}`);
+});
+```
+
+Layout cadence: every active `Sequence` walks its direct children once per
+frame and calls `computeLayout()` on any that are `Flex`. A `Flex` outside
+a `Sequence` recomputes only when you call `computeLayout()` manually.
 
 The scrubber ([demo/src/scrubber.ts](../demo/src/scrubber.ts)) is a small
 example of wiring the engine to a UI: it subscribes to `comp.frame`, calls
