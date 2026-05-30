@@ -341,6 +341,9 @@ and a draggable timeline scrubber:
 - **Image — slider** — 4-stop slide-in/hold/slide-out transitions over `Konva.Image`.
 - **Image — crossfade** — opacity-eased crossfade with a Ken-Burns zoom.
 - **Image — circular clip reveal** — animated `clipFunc` growing a circle to reveal each image.
+- **Text · fitText** — auto font-sizing inside a `Block` whose width animates, single- vs multi-line fit, `maxLines`, and `maxWidth`/`maxHeight`.
+- **Text · typewriter** — typing inside a `Block` bubble, type-then-highlight, and a `reserveHeight: true` vs `false` side-by-side.
+- **Text · highlight** — a marker inside a `Block`, several colored marks at once, and a long (multi-line) mark beside a short one.
 - **Typewriter — AI chat** — character-by-character text reveal with a blinking caret.
 - **Flex layout — auto card** — `Flex` + `Block` + `Image` auto-flow: text rewraps under the image as the card animates width.
 - **Flex — typewriter pushes image** — text typing inside a `Block` grows the column; the image below slides down each frame as the text height changes.
@@ -409,6 +412,11 @@ main.add(card);
 - **`Image(config)`** — fixed-box image with `objectFit`
   (`"cover" | "contain" | "fill" | "none"`), `objectPosition`, and
   `cornerRadius`. `src` accepts an `HTMLImageElement` or a URL string.
+- **`Text(config)`** — CSS-like text node (see [Text component](#text-component)):
+  `maxWidth`/`maxHeight`, `fitText` auto-sizing, `maxLines` with word/letter
+  trim + ellipsis, a built-in frame-driven `typewriter` (cursor + per-letter
+  fade), and per-range `highlights` (marker behind a char range, padding and
+  corner-radius applied only at the true run ends, never at a wrapped break).
 - **Child props** on any flex child: `flexGrow`, `flexShrink`, `flexBasis`,
   `alignSelf`, `margin`.
 - **Auto-measure** — raw `Konva.Text` and `Konva.Image` children of `Flex`
@@ -444,6 +452,82 @@ The scrubber ([demo/src/scrubber.ts](../demo/src/scrubber.ts)) is a small
 example of wiring the engine to a UI: it subscribes to `comp.frame`, calls
 `comp.setFrame()` on `<input type=range>` input (pausing while held), and
 toggles `comp.setLoop()` from a checkbox.
+
+## Text component
+
+`Text` wraps `Konva.Text` and adds CSS-like fitting plus timeline effects. It
+`extends Konva.Group`, so it drops into a `Sequence` or a `Flex`/`Block` like any
+other primitive and contributes its (fit-aware) intrinsic size to layout.
+
+```ts
+import { Text } from "@konva-motion/core";
+
+// Auto-size the font so the whole phrase fills a fixed box.
+seq.add(new Text({
+  x: 40, y: 40, width: 560, height: 80,
+  text: "Auto-sized to fit its box",
+  fitText: { min: 12, max: 64 }, align: "center",
+}));
+
+// Clamp a long paragraph to two lines, trimming back to a whole word + "…".
+seq.add(new Text({
+  x: 40, y: 140, width: 560,
+  text: longParagraph, maxLines: 2, // trimBy: "word" (default) | "letter"
+}));
+```
+
+**Sizing & clamping**
+
+- `width`/`height` — explicit box (px or `"50%"`). `maxWidth`/`maxHeight` cap a
+  hug-content box.
+- `fitText: { min, max, step? }` — binary-searches the largest font size that
+  fits the box, multi-line aware.
+- `maxLines` / `maxHeight` — limit line count (a partial row is never clipped —
+  it's dropped, the text trimmed, and an ellipsis added). `wrap: "none"` trims
+  to a single line. `trimBy: "word" | "letter"` (default `"word"`),
+  `ellipsis` defaults on whenever a clamp triggers.
+
+**Typewriter** (`typewriter`, frame-driven & automatic — no `register` wiring)
+
+```ts
+seq.add(new Text({
+  x: 40, y: 240, width: 560, text: "Revealed one character at a time.",
+  typewriter: {
+    mode: "letter",            // or "word"
+    durationInFrames: 120,     // or omit and use `step` units/frame
+    cursor: { blink: true },   // off by default
+    fade: { durationInFrames: 6 }, // fade each unit in
+    reserveHeight: true,       // pre-measure full height to avoid layout shift
+  },
+}));
+```
+
+The reveal is a pure function of the frame, so scrubbing works. Configuring
+`typewriter` marks the node tickable; the enclosing `Sequence` drives it.
+
+**Highlights** (`highlights: HighlightConfig[]`) — a marker drawn behind a char
+range. Walks the wrapped lines and emits one rect per line-segment, so it splits
+correctly across a line break:
+
+```ts
+const text = new Text({ x: 40, y: 340, width: 560, text, highlights: [{
+  start, end,                         // char indices on the full text
+  background: "#f0c000", color: "#111", // mark fill + optional text-color override
+  paddingStart: 4, paddingEnd: 4,       // added only at the true run ends
+  cornerRadiusStart: 4, cornerRadiusEnd: 4, // rounded only at the true run ends
+  height: "line",                       // px (capped at line height) or "line"
+  progress: 0,                          // 0..1 sweep — animate it per frame
+}] });
+seq.add(text);
+seq.register((frame) => {
+  text.attrs.highlights[0].progress = interpolate(frame, [30, 70], [0, 1], { /* … */ });
+  text._layoutText(); // re-render the mark for direct (non-flex) children
+});
+```
+
+Padding and corner radius are applied only at the run's true start/end — a
+segment created by a wrapped line break gets neither, so the two halves butt
+together cleanly.
 
 ## Audio
 
