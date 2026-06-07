@@ -376,7 +376,7 @@ plain selectors (`.km-player__btn`, `km-player-controls`, …).
 
 - **Attributes:** `controls`, `loop`, `autoplay`, `muted`, `volume`,
   `playbackrate`, `initialframe`, `no-click-to-play`, `no-space-key`,
-  `double-click-fullscreen`.
+  `no-keyboard`, `double-click-fullscreen`.
 - **Methods:** `play`, `pause`, `toggle`, `stop`, `seekTo`, `stepBy`,
   `getCurrentFrame`, `isPlaying`, `setVolume`/`getVolume`,
   `mute`/`unmute`/`setMuted`/`toggleMute`/`isMuted`,
