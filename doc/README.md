@@ -728,5 +728,39 @@ for (let f = 0; f < comp.durationInFrames.get(); f++) await comp.renderFrame(f);
 const audio = comp.getAudioAssets(); // feed to your mux pass
 ```
 
+### `@konva-motion/renderer` — video output
+
+For the batteries-included path, `@konva-motion/renderer` rasterizes a
+composition headlessly with [skia-canvas](https://skia-canvas.org) and encodes to
+a video file with ffmpeg — no browser, no bundler. It owns the frame loop, pipes
+raw RGBA to ffmpeg, and muxes the collected audio in one go.
+
+```ts
+import "@konva-motion/renderer/register"; // BEFORE building the comp
+import { Composition, Sequence, Audio } from "@konva-motion/core";
+import { renderComposition } from "@konva-motion/renderer";
+
+const comp = new Composition({ id: "demo", fps: 30, durationInFrames: 90, width: 1280, height: 720, mode: "rendering" });
+// ...add sequences, shapes, Image, Audio...
+
+const result = await renderComposition(comp, {
+  output: "out.mp4",
+  quality: "high",          // low | medium | high | max, or { crf, preset, audioBitrate }
+  onProgress: (p) => console.log(`${p.frame}/${p.total} @ ${p.fps.toFixed(0)} fps`),
+});
+// { output, width, height, frames, durationInSeconds, hasAudio }
+```
+
+`import "@konva-motion/renderer/register"` (or calling `setupServerRendering()`)
+must run **before** constructing the composition: it installs the konva skia
+backend, sets the rendering flag, and registers Node-safe media sources +
+image loader so `Image`/`Audio`/`Video` nodes build without a DOM.
+
+Other entry points: `renderStill(comp, { frame, output })` (one PNG/JPEG),
+`renderToStream(comp, opts)` (fragmented mp4 over a `Readable` + a `done`
+promise), and the primitive `renderFrames(comp, opts?)` (an async generator of
+raw RGBA frames) for custom encoders. `Video` nodes are decoded frame-by-frame
+with ffmpeg. See [renderer.md](./renderer.md) for the full API.
+
 See [architecture.md](./architecture.md) and
 [contributing.md](./contributing.md).
