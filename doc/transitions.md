@@ -156,11 +156,27 @@ above the two scenes.
 | `swap({ reflection?, perspective?, depth? })` | Perspective card swap with floor reflection. |
 | `bookFlip({ direction? })` | Page-turn / book flip. |
 
-**WebGL requirement.** Tier B needs a WebGL2 context. When none is available
-(e.g. headless/offline rendering), every shader transition falls back to
-`fade()` and a single `console.warn` is emitted. Shaders are deterministic in
-`progress`, so a frame renders identically given the same inputs — but offline
-(Node) rendering has no WebGL and will use the fade fallback.
+**WebGL requirement.** Tier B needs a WebGL context. In the browser the shared
+compositor uses WebGL2 directly. When none is available, every shader transition
+falls back to `fade()` and a single `console.warn` is emitted. Shaders are
+deterministic in `progress`, so a frame renders identically given the same
+inputs.
+
+**Server (Node) rendering.** skia-canvas has no WebGL, so by default offline
+renders use the fade fallback. To render shader transitions headlessly, add the
+optional [`gl`](https://github.com/stackgl/headless-gl) (headless-gl) package and
+import the GL wiring once, **before** building any `TransitionSeries`:
+
+```ts
+import "@konva-motion/renderer/register"; // skia backend + factories
+import "@konva-motion/renderer/gl";        // route Tier B through headless-gl
+```
+
+This installs a headless-gl + skia compositor (`setCompositorFactory`): the
+`#version 300 es` fragments are transpiled to GLSL ES 1.00 for WebGL1, scenes are
+uploaded as raw RGBA and the blended frame is read back into a skia canvas. If
+`gl` isn't installed, transitions still fall back to fade and a one-time hint is
+logged.
 
 ### Custom shaders
 
