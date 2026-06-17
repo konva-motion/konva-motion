@@ -96,6 +96,33 @@ the relevant one as a `<Callout>` on the pages where it bites. Frame them as
 - **Use `interpolate` extrapolation, not manual clamping.** Reach for
   `extrapolateLeft/Right: "clamp"` instead of `Math.min/max` around a ratio.
 
+## Authoring gotchas (engine reality, verified)
+
+Practical pitfalls hit while building the demos. The contributor copy lives in
+[`doc/authoring-demos.md`](authoring-demos.md); keep the two in sync. (This is an
+internal plan, so em-dashes here are fine — the no-em-dash rule is for published
+page prose and demo comments.)
+
+- **Layer order = add order.** A `Sequence` is a Konva layer; later-added
+  sequences paint on top. Add a full-canvas background `Sequence` **first** so it
+  sits under the content, not over it. (Bit `range-gate`: cards were hidden
+  behind a background added last.)
+- **Update `Text` content with `setText(...)`.** The core `Text` wrapper extends
+  `Konva.Group`, not `Konva.Text`, so it has no `.text()` accessor; `.text(...)`
+  throws. Other wrappers (`Rect`/`Circle`/`Line`/…) extend their `Konva.Shape`,
+  so `.opacity()`/`.x()`/`.points()`/etc. work as normal.
+- **Don't grow a flex leaf with `.width(n)`.** `FlexShape.width(n)` sets the flex
+  *size value*, not the rendered width, so it won't visibly resize a leaf from an
+  updater. To make a child fill space use `flexGrow` (or a `%` width) and let the
+  layout reflow. To animate a Flex *container's* own size, `setAttrs({ flexWidth })`
+  (the constructor takes `width`, stored as the `flexWidth` attr).
+- **Raw `Konva.*` IS laid out inside a Flex.** Verified against
+  `layout/flex/flex.ts`: a raw `Konva.Rect`/`Text`/`Image` with a numeric size is
+  measured, placed, and origin-corrected. The wrappers' real edge is `%` sizes,
+  flex child props, nested containers, and the rich Text/Image/Block features
+  (see the wrappers bullet above). Don't teach "raw won't reflow."
+- **60fps scaling** when authoring or porting: see the 60fps locked decision.
+
 ## Target information architecture (`meta.json`)
 
 ```

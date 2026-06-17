@@ -17,20 +17,19 @@ sync or async — also works; the player's `resolveComposition` unwraps it).
 
 ```ts
 // packages/docs/src/demos/<name>.ts
-import { Composition, Sequence } from "@konva-motion/core";
-import Konva from "konva";
+import { Composition, Rect, Sequence } from "@konva-motion/core";
 
 const comp = new Composition({
   id: "<name>",
-  fps: 30,
-  durationInFrames: 90,
+  fps: 60, // all demos run at 60fps
+  durationInFrames: 120, // 2 seconds at 60fps
   width: 1280,
   height: 720,
   loop: true, // loop so the embedded player replays
 });
 
-const main = new Sequence({ from: 0, durationInFrames: 90 });
-main.add(new Konva.Rect({ x: 0, y: 0, width: 1280, height: 720, fill: "#0d1117" }));
+const main = new Sequence({ from: 0, durationInFrames: 120 });
+main.add(new Rect({ x: 0, y: 0, width: 1280, height: 720, fill: "#0d1117" }));
 // …build the scene; drive attributes from the frame via main.register(...)…
 comp.add(main);
 
@@ -38,6 +37,11 @@ export default comp;
 ```
 
 That's it — no registry to edit, no manual wiring.
+
+Prefer the core drawing wrappers (`Rect`, `Circle`, `Text`, `Image`, `Flex`,
+`Block`, …) over raw `Konva.*`. They render the same but participate in flex
+layout, so a demo can reflow without hand-positioning. Reach for `Konva.*` only
+for something core doesn't wrap.
 
 ## Embedding it in a page
 
@@ -78,9 +82,26 @@ Because the demo is emitted as its own `?url` chunk, Vite rewrites these imports
 to served URLs that resolve when the player loads the module. `.mp4`/`.mp3`/
 `.wav`/image imports are typed via `vite/client` (already in the docs tsconfig).
 
+## Conventions & gotchas
+
+- **60fps.** Use `fps: 60`. Size `durationInFrames` and any frame anchors /
+  `interpolate` ranges for 60fps (e.g. a 5s demo is `300` frames, not `150`). If
+  a page shows the demo's code inline, keep that copy in sync with the file.
+- **Prefer core wrappers over raw `Konva.*`** (see above).
+- **Layer order = add order.** A `Sequence` is a Konva layer; later-added
+  sequences paint on top. Add a full-canvas background `Sequence` **first** so it
+  sits under the content, not over it.
+- **Updating `Text` content:** the core `Text` wrapper extends `Konva.Group`, so
+  change its text with `node.setText("…")` — it has no Konva `.text()` setter.
+- **Growing a flex leaf:** `FlexShape.width(n)` sets the flex *size value*, not
+  the rendered width, and won't visibly resize a leaf from an updater. To make a
+  child fill space use `flexGrow` (or a `%` width) and let the layout reflow;
+  animate the container's `width`/`gap` via `setAttrs`.
+
 ## Checklist
 
 - [ ] File at `packages/docs/src/demos/<name>.ts`, default-exports a `Composition`.
-- [ ] `loop: true` so the embedded player replays.
+- [ ] `fps: 60`, and `loop: true` so the embedded player replays.
+- [ ] Scene built from core wrappers (raw `Konva.*` only where core has no wrapper).
 - [ ] Any media lives under `src/demos/assets/` and is imported relatively.
 - [ ] Page embeds it with `<Demo name="<name>" />`.
