@@ -106,20 +106,29 @@ an internal authoring reference.
 
 # Build steps
 
-## Step 0 — Foundations (do first, unblocks everything)
+## Step 0 — Foundations (do first, unblocks everything) ✅ DONE
 
-- [ ] Restructure `content/docs/meta.json` to the IA above (group headers +
-      ordered slugs).
-- [ ] Formalize the **demo authoring contract**: each demo is
+- [x] Restructure `content/docs/meta.json` to the IA above (group headers +
+      ordered slugs). *Applied the new group headers (Getting Started, Player)
+      with only the pages that exist today; later steps append their slugs as
+      pages are authored. `components`/`layout-and-shapes` dropped from public
+      nav (files kept on disk as internal reference).*
+- [x] Formalize the **demo authoring contract**: each demo is
       `src/demos/<name>.ts` whose default export is a `Composition` (or a
       `() => Composition` factory). `<Demo>` renders it live via `?url` into
       `<km-player src>` and shows source via `?raw` — from the same file.
-- [ ] Decide + (optionally) implement the `<Demo name="...">` single-prop
+- [x] Decide + (optionally) implement the `<Demo name="...">` single-prop
       helper that resolves both `?url` and `?raw` from one name, replacing the
-      two-import-per-page boilerplate.
-- [ ] Port the 4 demos that already exist in core into `src/demos/`:
-      `flex-layout`, `text-highlight`, `video-sync`, `audio-mixer`.
-- [ ] Add a short contributor note (`doc/authoring-demos.md`) describing the
+      two-import-per-page boilerplate. *Implemented via two eager
+      `import.meta.glob` maps in `src/components/demo.tsx`; `name` resolves both
+      views (throws on unknown name). `src`/`source` props kept as an override.
+      `src/demos/registry.ts` deleted (superseded). `player.mdx` migrated to
+      `<Demo name="orbit" />` and verified live.*
+- [x] Port the 4 demos that already exist in core into `src/demos/`:
+      `flex-layout`, `text-highlight`, `video-sync`, `audio-mixer`. *Ported from
+      `demo/src/compositions/*/composition.ts`; media copied into
+      `src/demos/assets/` and imports rewritten to `./assets/...`.*
+- [x] Add a short contributor note (`doc/authoring-demos.md`) describing the
       contract.
 
 ## Step 1 — Getting Started (priority: current docs are actively wrong)
