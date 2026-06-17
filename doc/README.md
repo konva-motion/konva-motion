@@ -383,6 +383,36 @@ const player = document.querySelector("km-player");
 player.composition = comp; // Composition — no container needed; core makes one
 ```
 
+Instead of assigning a composition imperatively, point the player at a **remote
+ESM module** with the `src` attribute — like `<video src>`:
+
+```html
+<km-player src="https://cdn.example/bouncing.js" controls></km-player>
+```
+
+The module's **default export** is resolved to a live `Composition`. It may be a
+`Composition` instance, a factory returning one (sync or async), or a factory
+resolving to `{ default: Composition }` — the same shape the studio registry
+accepts:
+
+```ts
+// bouncing.js (the remote module)
+import { Composition, Sequence } from "@konva-motion/core";
+const comp = new Composition({ id: "bouncing", fps: 60, durationInFrames: 120 });
+// …build the scene…
+export default comp; // or: export default () => comp / async () => comp
+```
+
+Relative `src` values resolve against the document base (like `<video>`). The
+player emits `loadstart` when a load begins and `loaded` once mounted; a failed
+import (or a module that doesn't resolve to a Composition) emits `error`. A
+`loading` attribute is reflected on the host while the import is in flight. An
+imperatively-assigned `composition` property takes precedence over `src`.
+
+> ⚠️ **Security:** `src` does a dynamic `import()`, which **executes arbitrary
+> code** from the URL. Only load modules you trust, and ensure your CSP
+> `script-src` permits the origin.
+
 ```html
 <km-player controls loop autoplay>
   <km-player-overlay>
@@ -408,7 +438,7 @@ player.composition = comp; // Composition — no container needed; core makes on
 control bar. **Light DOM** + opt-in CSS means every part is overridable with
 plain selectors (`.km-player__btn`, `km-player-controls`, …).
 
-- **Attributes:** `controls`, `loop`, `autoplay`, `muted`, `volume`,
+- **Attributes:** `src`, `controls`, `loop`, `autoplay`, `muted`, `volume`,
   `playbackrate`, `initialframe`, `no-click-to-play`, `no-space-key`,
   `no-keyboard`, `double-click-fullscreen`.
 - **Methods:** `play`, `pause`, `toggle`, `stop`, `seekTo`, `stepBy`,
@@ -419,7 +449,8 @@ plain selectors (`.km-player__btn`, `km-player-controls`, …).
   `getScale`.
 - **Events** (`CustomEvent`, bubbling): `play`, `pause`, `ended`, `seeked`,
   `frameupdate`, `timeupdate` (throttled), `ratechange`, `volumechange`,
-  `mutechange`, `fullscreenchange`, `scalechange`, `error`.
+  `mutechange`, `fullscreenchange`, `scalechange`, `loadstart`, `loaded`,
+  `error`.
 
 See [demo/src/studio/PlayerWcDemo.tsx](../demo/src/studio/PlayerWcDemo.tsx)
 (route `/#/player`) for a working example.
