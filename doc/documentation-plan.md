@@ -16,6 +16,13 @@ and leans on Konva's config-object conventions.
 - **Full live demo library** — one `.ts` composition per concept in
   `packages/docs/src/demos/`, rendered live in `<km-player>` and shown as
   source from the *same file* (single source of truth).
+- **All demos run at 60fps.** New demos use `fps: 60`; when you need a specific
+  real-time pace, size `durationInFrames` (and any frame anchors / interpolate
+  ranges) for 60fps, not 30. The four ported demos were converted: frame counts,
+  `from`/`trim` windows, and frame-rate-dependent oscillators were all doubled or
+  halved so timing and media sync are unchanged. If a page shows a demo's code
+  inline (e.g. `installation` mirrors `first-tween`), keep the inline copy in
+  sync with the demo file.
 
 ## Tone of voice
 
@@ -26,8 +33,30 @@ and leans on Konva's config-object conventions.
   attribute *at frame N*" — never CSS transitions or `setInterval`.
 - Config-object parity with Konva: "every `Konva.RectConfig` prop works, plus
   flex props." Link out to Konva docs instead of re-documenting raw attributes.
-- Each page shape: *what it's for → smallest runnable example → live demo →
-  2–3 variations → when to reach for it + gotchas.*
+- Each page shape: *what it's for, smallest runnable example, live demo,
+  2-3 variations, when to reach for it + gotchas.*
+
+### Write like a human, not an LLM
+
+The docs should read as if a developer wrote them. Avoid the tells that mark
+machine-generated prose:
+
+- **No em-dashes or en-dashes (`—`, `–`).** Use a plain hyphen `-`, a comma, a
+  colon, parentheses, or just split the sentence. This is the biggest tell;
+  scrub every one.
+- **No "it's not just X, it's Y" / "X isn't merely Y" constructions.** Say the
+  thing directly.
+- **Drop filler superlatives** ("seamless", "robust", "powerful", "effortless",
+  "leverage", "delve", "boasts", "unlock", "elevate"). State what it does.
+- **Go easy on bold.** Bold a term on first definition, not every other phrase.
+- **No "Let's dive in", "In conclusion", "It's worth noting that".** Cut throat-
+  clearing; lead with the point.
+- **Vary sentence length; allow short sentences.** Don't make every sentence a
+  balanced two-clause structure.
+- Use straight quotes/apostrophes (`'` `"`) in prose where practical.
+
+Apply this to page prose, demo source comments, and code-block comments. When
+editing existing pages, treat an em-dash as a defect to fix.
 
 ## Best practices to teach throughout
 
@@ -37,12 +66,17 @@ the relevant one as a `<Callout>` on the pages where it bites. Frame them as
 *recommended*, not *required* — most have a working escape hatch.
 
 - **Prefer konva-motion wrappers over raw `Konva.*`.** `Rect`/`Circle`/`Text`/
-  `Image`/… from core extend their Konva equivalents *and* participate in flex
-  layout + the layout contract. Raw `Konva.Rect` still renders (escape hatch),
-  but it won't reflow inside `Flex`/`Block` and won't be measured/placed. Rule of
-  thumb: import the drawing vocabulary from `@konva-motion/core`, reach for
-  `Konva.*` only for something core doesn't wrap yet. *(Not never — just not the
-  default.)*
+  `Image`/… from core extend their Konva equivalents *and* add full flex
+  participation. NOTE (verified against `layout/flex/flex.ts`): a raw
+  `Konva.Rect`/`Text`/`Image` with a fixed numeric size **is** measured and
+  placed (and origin-corrected) inside a `Flex` — the old "won't reflow / won't
+  be measured" framing is inaccurate. What raw nodes *can't* do is express
+  percentage sizes (`width: "100%"`), flex child props
+  (`flexGrow`/`flexShrink`/`flexBasis`/`alignSelf`), nested `Flex`/`Block`
+  containers, or the rich `Text` (fit/highlights/typewriter) / `Image`
+  (objectFit) / `Block` (background/border/shadow) features. Rule of thumb:
+  import the drawing vocabulary from `@konva-motion/core`, reach for `Konva.*`
+  only for something core doesn't wrap yet. *(Not never, just not the default.)*
 - **Animate as a function of frame.** Drive attributes from `localFrame` via
   `seq.register()` + `interpolate()`/`Easing`. Never `setInterval`,
   `requestAnimationFrame`, `Konva.Tween`, or CSS transitions — only frame-derived
@@ -156,11 +190,19 @@ Pages: `introduction`, `installation`, `core-concepts`, `best-practices`.
       Each principle has a one-line *why* + a do/don't snippet. Later pages link
       back here via `<Callout>`s.
 - [x] Demos: `hero`, `first-tween`, `frame-clock`, `range-gate`,
-      `wrapper-vs-raw` (side-by-side: a raw `Konva.Rect` that won't reflow in a
-      `Flex` vs the core `Rect` that does). *All five added to `src/demos/`, use
-      core wrappers, verified live in `<km-player>`. Gotcha caught: the core
-      `Text` wrapper extends `Konva.Group`, so update its content with
-      `setText(...)`, not Konva's `.text(...)`.*
+      `wrapper-vs-raw`. *All five added to `src/demos/`, use core wrappers, run at
+      `fps: 60`, verified live in `<km-player>`.*
+      - `wrapper-vs-raw` shows **flexGrow**: as a Flex widens, the core `Rect`
+        (`flexGrow: 1`) fills the row while a raw `Konva.Rect` can't and leaves a
+        gap. *(NOT the original "raw won't reflow" idea — that was found false;
+        see the corrected wrappers bullet under "Best practices to teach
+        throughout".)*
+      - Gotchas caught: (1) the core `Text` wrapper extends `Konva.Group`, so
+        update its content with `setText(...)`, not Konva's `.text(...)`; (2) the
+        `FlexShape` `.width()` setter changes the flex size value, not the render
+        width — to grow a leaf use `flexGrow`/layout, not `.width(n)` in an
+        updater; (3) add the full-canvas background `Sequence` **first** so it
+        sits under the content layers (Konva layer order = add order).
 - [x] Nav: appended `core-concepts` + `best-practices` to the Getting Started
       group in `content/docs/meta.json`.
 
