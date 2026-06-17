@@ -78,3 +78,50 @@ A composition marks its underlying Stage with a `__KonvaMotionComposition`
 property. Constructing a second `Composition` over the same Stage throws —
 useful if you ever wrap an existing stage. Use `getComposition(stage)` to
 read the marker.
+
+## Layout engine
+
+`core` ships a synchronous flexbox engine ([flexily](https://github.com/beorn/flexily))
+exposed through Konva subclasses: `Flex`/`Block` (containers, `Konva.Group`),
+`Image`/`Text`/`Video` (leaves), and a flex-aware wrapper for every Konva shape
+(`Rect`, `Circle`, `Star`, …) built with the `FlexShape` mixin.
+
+### The open contract
+
+Layout participation is a duck-typed contract, `KMLayoutNode`
+(`layout/contract.ts`), rather than a closed `instanceof` switch — so wrapping a
+new node type never means editing the engine. A participating node exposes:
+
+- `_kmRole: "container" | "leaf"`,
+- `_kmMeasure?(flexNode, ctx)` — leaf-only: set the flexily node's size,
+- `_kmPlace(box)` — write the computed box back (origin-corrected; containers
+  restyle),
+- `_kmComputeLayout?()` — container-only: lay self out as a flex root.
+
+`buildChildren`/`writeBack` (`layout/flex/flex.ts`) dispatch through
+`isKMLayoutNode`; `Sequence._apply` calls `_kmComputeLayout()` on any direct
+child for which `isKMLayoutRoot` is true. A raw `Konva.*` node that doesn't
+implement the contract still gets a generic fallback (size from numeric
+`width`/`height` attrs, position origin-corrected via `getSelfRect()`).
+
+### Per-frame layout pass
+
+For each active `Sequence`, `_apply` runs the order: updaters → media/typewriter
+ticks → `computeLayout()` on container roots → `batchDraw()`. Ticking before
+layout means a node that changes its measured size this frame (e.g. a Text
+typewriter revealing a line) is laid out with the up-to-date size, not a frame
+behind.
+
+### Shape wrappers (`FlexShape`)
+
+`FlexShape(Konva.X)` (`layout/flex/mixin.ts`) returns a leaf-contract subclass:
+it strips konva-motion-only config keys, records the flex child props +
+`px`/`%` size values as attrs, measures via `getSelfRect()`, and writes back
+with origin correction. Each shape in `layout/shapes.ts` is then a one-liner.
+
+**Gotcha:** for shapes whose `width`/`height` map onto geometry
+(`Circle`→radius, `Star`→outerRadius, …), the config translator *deletes*
+`width`/`height` when no pixel value is given rather than setting them to
+`undefined` — a `width: undefined` reaching the Konva constructor would wipe the
+radius. (Plain `Konva.Group`-based wrappers like `Block`/`Image` are immune, so
+their translators predate this rule.)
