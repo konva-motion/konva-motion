@@ -233,18 +233,40 @@ Pages: `introduction`, `installation`, `core-concepts`, `best-practices`.
 - [x] Nav: appended `core-concepts` + `best-practices` to the Getting Started
       group in `content/docs/meta.json`.
 
-## Step 2 — Animating
+## Step 2 — Animating ✅ DONE
 
 Pages: `interpolation`, `easing`, `sequencing`.
 
-- [ ] **interpolation** — `interpolate(input, inputRange, outputRange,
-      {extrapolateLeft/Right})`; multi-stop ranges; `interpolateColors`.
-- [ ] **easing** — `Easing.*`, `Easing.in/out/inOut`, `Easing.bezier`,
-      elastic/back/bounce; spring feel; same move under 4 curves.
-- [ ] **sequencing** — `from`/`durationInFrames`; staggering N nodes; `Series`
-      for back-to-back scenes; trim-in/out.
-- [ ] Demos: `interpolate-basics`, `color-shift`, `easing-compare`, `stagger`,
-      `series-scenes`.
+- [x] **interpolation** — `interpolate(input, inputRange, outputRange,
+      {easing/extrapolateLeft/Right})`; multi-stop ranges; the four extrapolate
+      modes (table) with `"clamp"` as the common one; `easing` option (link to
+      easing); `interpolateColors`. *`interpolate-basics` + `color-shift` demos.*
+- [x] **easing** — easing reshapes the 0→1 progress inside `interpolate`'s
+      `easing` option (no separate tween API); presets table; `in/out/inOut`
+      modifiers; factories `bezier`/`elastic`/`back`/`poly`; same move under 5
+      curves via `easing-compare`.
+- [x] **sequencing** — recap `from`/`durationInFrames` + local frame (link to
+      core-concepts); staggering N nodes in one sequence via `frame - i * step`
+      (`stagger`); `Series` for back-to-back scenes (`series-scenes`), `offset`
+      semantics (0/gap/overlap), `comp.add(series)` auto-expands.
+- [x] Demos: `interpolate-basics`, `color-shift`, `easing-compare`, `stagger`,
+      `series-scenes`. *All run at `fps: 60`, loop, core wrappers only.*
+- [x] Nav: appended `---Animating---` group + the three slugs after Getting
+      Started in `content/docs/meta.json`.
+
+Verified facts / corrections caught while building:
+- `Easing.in(fn)` is an **identity no-op** in konva-motion (a bare preset already
+  eases in) — documented as such; reach for `out`/`inOut` to change the shape.
+- `interpolateColors(input, inputRange, outputRange)` takes **no options arg** and
+  **always clamps** both ends (unlike `interpolate`). Documented as a Callout.
+- `Series.add({durationInFrames, offset}, (seq) => …)`: `offset` 0 = back-to-back,
+  positive = gap, negative = overlap (cross-fade); `comp.add(series)` expands via
+  `SequenceProvider`. `series-scenes` adds a base background `Sequence` first so
+  scenes have a backdrop while they cross-fade.
+- Sequence has **no trim props** (those are on `Video`/`Audio`) — Callout on the
+  sequencing page so the distinction is explicit.
+- Forward links to not-yet-authored pages (`video`/`audio`/`shapes`/`transitions`)
+  left in place, matching how Step 1 linked forward to these pages before authoring.
 
 ## Step 3 — Drawing
 
