@@ -507,32 +507,71 @@ Verified facts / corrections caught while building:
   `scenes[i]` access; unrelated to Step 7 (flagged as a follow-up task). The Step 7
   files type-check clean.
 
-## Step 8 — Rendering
+## Step 8 — Rendering ✅ DONE
 
 Pages: `rendering`, `rendering-media`. (`rendering-setup` already exists, authored
 in the post-Step-7 setup-page split: it carries the `@konva-motion/renderer`
 install, native requirements, the `/register` import, and the optional `gl` shader
 path. Step 8's pages link back to it and focus on the API, not install.) The
 renderer is Node/headless and **API-only (no CLI)** — these pages use annotated
-code blocks, not `<km-player>` previews. Where helpful, embed the resulting MP4 as
-a `<video>`.
+code blocks, not `<km-player>` previews. *Result `<video>` embeds were skipped
+(code-only): there is no static-asset/`<video>` pattern in the docs and it would
+mean committing a binary; the headless nature is conveyed in prose instead.*
 
-- [ ] **rendering** — "your composition → MP4 file." `import
+- [x] **rendering** — "your composition → MP4 file." `import
       "@konva-motion/renderer/register"` (= `setupServerRendering()` at import)
       before building the comp; `renderComposition(comp, {output, fps,
-      resolution, fit, quality, range, mute, onProgress, signal})`; quality
-      presets (`low`/`medium`/`high`/`max`); `RenderResult`; progress +
-      `AbortSignal`. Single frame with `renderStill({frame, type})`; raw frames
-      with the `renderFrames()` async generator. Call out the no-CLI note (run
-      a `.ts` file with `tsx`/`node`).
-- [ ] **rendering-media** — server-side assets & advanced: the `mediaSrc`
-      asset-URL helper (Vite URL → fs path) so media comps render headlessly;
-      custom image/video source factories and `setupServerRendering({video,
-      fonts, videoDecodeCap})`; font registration (`registerFonts`); how audio
-      is collected + muxed (`collectAudioTrack`, ffmpeg mix); shader (Tier B)
-      transitions via `import "@konva-motion/renderer/gl"` + the headless-gl
-      optional dep and `fade()` fallback when `gl` is absent.
-- [ ] No live demos — annotated code + optional embedded result `<video>`.
+      resolution, fit, quality, range, mute, onProgress, signal, fonts,
+      ffmpegPath})` (options table); quality presets table
+      (`low`/`medium`/`high`/`max`, crf/x264-preset/audio-bitrate, `medium`
+      default, custom `QualityConfig`); `RenderResult` table; `onProgress`
+      (`{frame,total,fps,etaSeconds?}`) + `AbortSignal` snippets. Single frame
+      with `renderStill({frame, output?, type, quality})` (returns a Buffer);
+      raw frames with the `renderFrames()` async generator + a one-line
+      `renderToStream` mention. No-CLI Callout (run a `.ts` with `npx tsx`).
+- [x] **rendering-media** — server-side assets & advanced: the
+      `@konva-motion/vite` `konvaMotion({serverAssets})` import rewrite (Vite URL
+      → fs path in the SSR build) so media comps render headlessly **(NOT a
+      `mediaSrc` helper — see correction below)**; font registration
+      (`registerFonts` + the `fonts` option, why: no DOM `@font-face`); how audio
+      is collected + muxed (`collectAudioTrack`, ffmpeg `amix`, `mute`, master
+      mixer carry-through); `setupServerRendering({videoDecodeCap})` for memory;
+      custom `video` source factory; shader (Tier B) transitions via `import
+      "@konva-motion/renderer/gl"` + the optional `gl` dep and `fade()` fallback.
+- [x] No live demos — annotated `ts`/`bash` code blocks only.
+- [x] Nav: appended `rendering` + `rendering-media` after `rendering-setup` in the
+      `---Rendering---` group in `content/docs/meta.json`.
+- [x] Verified: `pnpm --filter @konva-motion/docs build` passes;
+      `/docs/rendering`, `/docs/rendering-media`, `/docs/rendering-setup` all serve
+      200 and render with the new nav group (all three slugs present), every
+      section heading, the three rendering tables, the `#quality-presets` anchor,
+      and no error overlay. Biome clean on touched files. Every snippet checked
+      against the verified signatures and `renderer/examples/render-demo.ts`.
+
+Verified facts / corrections caught while building:
+- **No `mediaSrc` helper exists.** The plan named a `mediaSrc` asset-URL helper
+  (Vite URL → fs path); `grep` finds no such export anywhere and the old
+  `demo/src/media-src.ts` was deleted. The behavior now lives in the
+  `@konva-motion/vite` plugin (`packages/vite/src/index.ts`): `konvaMotion({
+  serverAssets })` is a `load` hook (`enforce: "pre"`) that rewrites media/image
+  imports to an absolute fs path **in the SSR build only** (client keeps the URL),
+  so `new Video({ src: clip })` works in both preview and render with no per-`src`
+  helper. Default `serverAssets` covers mp4/webm/mov/m4v/mkv/mp3/wav/ogg/m4a/aac/
+  flac/png/jpg/jpeg/webp/avif/gif. The page documents the plugin, not `mediaSrc`.
+- **`FrameRange` is `{ from, to }` inclusive** (`renderer/types.ts`), used by
+  `range` on `renderComposition`/`renderFrames` — e.g. `{ from: 0, to: 59 }` is
+  the first second at 60fps.
+- **`renderStill` returns a `Buffer`**; `output` is optional (write-and-return).
+  `type` is `"png"` (default) or `"jpeg"`; `quality` 0..1 applies to JPEG.
+- **Server audio is metadata-only.** `NullAudioSource` is used during frame draw;
+  ffmpeg does the real decode/trim/volume-envelope/`amix`/mux in a separate pass.
+  Frame-driven `setVolume` becomes a keyframed envelope; `comp.mixer` scales on
+  top; `RenderResult.hasAudio` reports whether a track was written.
+- **`videoDecodeCap`** (`setupServerRendering`) caps decode resolution to bound
+  memory on long, video-heavy renders (skia retains every decoded frame's pixels);
+  oversized clips are scaled down and Konva upscales into the display box.
+- The page set kept it API-focused and linked back to `rendering-setup` for
+  install/native reqs rather than repeating them.
 
 ## Step 9 — Studio (Preview)
 
