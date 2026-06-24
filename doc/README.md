@@ -85,11 +85,19 @@ same underlying stage throws.
 - `playbackRate` — speed multiplier (default `1`); negative plays in reverse.
 - `isStopped` — derived: `!isPlaying && frame === 0`
 - `isPaused` — derived: `!isPlaying && frame > 0`
+- `buffer` — asset-buffering state: `"idle" | "buffering" | "ready"`. While
+  `"buffering"` no frame is drawn (the stage is transparent) until assets load.
+- `isBuffering` — derived: `buffer === "buffering"`.
 
 **Methods:**
 
 - `play()` — starts the rAF loop. Throws in environments without
-  `requestAnimationFrame`. Emits `"play"`.
+  `requestAnimationFrame`. Emits `"play"`. **Buffer-aware**: if assets are still
+  loading it defers and starts automatically once `buffer` becomes `"ready"`.
+- `whenReady()` — `Promise<void>` that resolves when no registered assets are
+  pending (immediately if idle/ready).
+- `registerAsset(promise, label?)` — register an async asset (e.g. a `Font`) to
+  buffer on; flips `buffer` to `"buffering"` until it (and all others) settle.
 - `pause()` — stops the loop, leaves `frame` as-is.
 - `stop()` — stops the loop, resets `frame` to 0, emits `"stop"`.
 - `setFrame(n)` — clamped to `[0, durationInFrames - 1]`; applies updaters
@@ -735,6 +743,75 @@ seq.register((frame) => {
 Padding and corner radius are applied only at the run's true start/end — a
 segment created by a wrapped line break gets neither, so the two halves butt
 together cleanly.
+
+## Fonts
+
+`Font` declares a font family and its faces. Add it to a `Sequence` and the
+`Composition` discovers it, loads it (environment-aware), and **buffers on it
+before playback** so text never flashes a fallback glyph. Pass the `Font` (or a
+specific face) to a `Text` via the `font` option.
+
+```ts
+import { Composition, Sequence, Font, Text } from "@konva-motion/core";
+import regular from "./MyFont-Regular.woff2?url";
+import italic from "./MyFont-Italic.woff2?url";
+import bold from "./MyFont-Bold.woff2?url";
+
+const font = new Font({
+  family: "My Font",
+  faces: [
+    { weight: 400, style: "normal", src: regular },
+    { weight: 400, style: "italic", src: italic },
+    { weight: 700, style: "normal", src: bold }, // `src` may be a remote URL too
+  ],
+});
+
+seq.add(font); // registered + loaded + buffered before play
+
+seq.add(new Text({ font, text: "Title" }));                  // preferred face (400/normal)
+seq.add(new Text({ font: font.face("700"), text: "Bold" })); // 700, normal
+seq.add(new Text({ font: font.face("400-italic"), text: "Quote" })); // exact face
+```
+
+**Face selection** — `font.face(selector?)`:
+
+- no selector (or passing the bare `Font`) → preferred face: `400`/`normal`, else
+  the first declared face.
+- `"400"` → first `400`/`normal`, else first `400` of any style. Throws if there
+  is no `400` face. (`"bold"` → `700`, `"normal"` → `400`.)
+- `"400-italic"` → exactly that weight + style; **throws** if it doesn't exist.
+
+The face's weight + style become Konva's `fontStyle`, overriding any
+`fontFamily`/`fontStyle` on the `Text`. When the font finishes loading the `Text`
+re-lays-out and redraws automatically.
+
+> `family` is a **process-global** identity in the text backend (browser
+> `document.fonts` and skia `FontLibrary` both key on it). Give distinct fonts
+> distinct family names; declaring the same `weight`+`style` twice warns and uses
+> the first.
+
+**Buffer state.** While any font (or other registered asset) is loading,
+`comp.buffer` is `"buffering"`; once all settle it flips to `"ready"`. **Nothing
+is rendered while buffering** — sequences are kept hidden so the stage stays
+transparent rather than flashing fallback glyphs; the first frame is painted only
+once every asset is ready. `play()` is buffer-aware: called while buffering it
+defers and starts automatically once ready (so a player can show a spinner).
+Await readiness explicitly with `comp.whenReady()`. (Offline rendering doesn't
+buffer — fonts gate `renderFrame` via `delayRender` instead, so frames are still
+captured correctly.)
+
+```ts
+comp.buffer.get();      // "idle" | "buffering" | "ready"
+comp.isBuffering.get(); // boolean
+await comp.whenReady(); // resolves when no assets are pending
+comp.play();            // auto-defers if still buffering
+```
+
+**Server rendering.** `setupServerRendering()` installs a skia-canvas font loader
+that registers scene `Font`s headlessly (no DOM `@font-face`). Remote `src` URLs
+are downloaded once into a disk cache (`fontCacheDir`, default
+`os.tmpdir()/konva-motion-fonts`) and reused across frames and runs. Setup-time
+fonts can still be registered up front via the `fonts` option.
 
 ## Audio
 
