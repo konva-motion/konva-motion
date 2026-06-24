@@ -776,17 +776,21 @@ comp.play(); // audio is audible after a user gesture (e.g. the play button)
 - `playbackRate?: number` — speed multiplier (default `1`).
 - `startFrom`/`endAt` — deprecated aliases of `trimBefore`/`trimAfter`.
 - `sourceFactory?` — inject an alternative `AudioSource` (defaults to
-  `BrowserAudioSource`, which wraps an `HTMLAudioElement`).
+  `MediabunnyAudioSource`, which decodes via Mediabunny + WebCodecs).
 
 Methods: `setVolume(0..1)`, `setMuted(bool)`, `setPlaybackRate(rate)`.
 Readonly signals: `volume`, `muted`. Helper: `isAudioNode(node)`.
 
-In **preview** the underlying `<audio>` element plays in realtime; the driver
-only seeks to correct drift > 0.45s, and fast-seeks to the exact frame while
-paused/scrubbing. **Browsers block un-muted playback until a user gesture** — the
-element starts muted and becomes audible via the mixer once the user has
-interacted with the page (the scrubber's play button counts). A failed `play()`
-is logged, not thrown.
+In **preview** audio is decoded with [Mediabunny](https://mediabunny.dev) and
+scheduled on a shared Web Audio `AudioContext` — there's no self-playing
+`<audio>` element. While the composition plays, the driver decodes buffers ahead
+of the playhead and schedules them against the audio clock (anchored to the frame
+clock), so audio stays sample-accurate; pausing/scrubbing stops scheduling, and a
+seek re-anchors. Volume automation and the mixer master apply per frame, and
+looping clips replay their trimmed segment seamlessly. **Browsers block playback
+until a user gesture** — the context is `resume()`d on first play (the scrubber's
+play button counts). Reverse playback produces no audio, and `playbackRate ≠ 1`
+shifts pitch (Web Audio has no time-stretch).
 
 ### The mixer — `comp.mixer`
 
