@@ -173,3 +173,32 @@ producing wrong glyphs/metrics offline.
 browser and Node/skia render, so a composition declaring a font renders identical
 glyphs and metrics in preview and export. Document font loading in the authoring
 docs.
+
+---
+
+## 9. Performance: disable Konva event listeners
+
+**What** — Provide a way to turn off all Konva event handling (hit graph + click/
+tap listening) so playback and rendering don't pay for hit detection.
+
+**Why** — konva-motion is timeline-driven, not interactive: the stage is drawn
+each tick but nothing needs pointer hit-testing. Konva builds and maintains a hit
+graph and pointer listeners by default, which is wasted CPU/memory per
+`batchDraw`. Disabling it should speed up playback (especially many shapes) and
+server render.
+
+**Where**
+- Internal sub-nodes already opt out ad hoc with `listening: false`
+  ([block.ts](../packages/core/src/layout/block.ts),
+  [image.ts](../packages/core/src/layout/image.ts),
+  [text.ts](../packages/core/src/layout/text/text.ts)) — but there's no global
+  switch and top-level wrappers/shapes still listen.
+- [composition.ts](../packages/core/src/engine/composition.ts) (`Stage`) and
+  [sequence.ts](../packages/core/src/engine/sequence.ts) (`Layer`) are the right
+  place to flip listening off by default.
+
+**Acceptance** — Default to no listeners for playback/render (e.g. stage
+`listening(false)` and/or `Konva.listenClickTap = false`, skip hit-graph drawing
+on layers). If the studio needs interaction (selection/editing), make it opt-in
+so authoring still works. Measure `batchDraw` cost before/after on a
+many-shape composition.
