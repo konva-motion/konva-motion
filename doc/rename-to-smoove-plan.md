@@ -769,7 +769,7 @@ one gradient focal moment per surface.
   flagged (gitignored `packages/docs/.source/*` Fumadocs output + vendored
   `.agents/skills/.../assets/*.tsx`).
 
-## Phase 9 — Integration gate (the "one big rebrand")
+## Phase 9 — Integration gate (the "one big rebrand") ✅ DONE (2026-06-30)
 
 1. `pnpm install` — clean relink under `@smoove/*`.
 2. `pnpm build` — every package green (incl. player Vite + standalone bundle).
@@ -780,6 +780,56 @@ one gradient focal moment per surface.
    `km-`, excluding bare `konva` / `Konva`).
 6. External links resolve: `github.com/smoove-dev/smoove`, `https://smoove.dev`,
    unpkg/jsdelivr standalone URLs.
+
+**Status / notes:**
+
+1. ✅ **`pnpm install`** — clean relink: all 10 workspace projects, lockfile up to
+   date, **0** residual `@konva-motion` entries, **20** `@smoove/` entries.
+2. ✅ **`pnpm build`** — green (exit 0) across every package incl. player's Vite
+   build + standalone bundle and the studio Tailwind CSS step.
+3. ✅ **`pnpm check` — now globally green (exit 0).** This phase **closed the
+   pre-existing Biome gap** Phases 4 & 8 flagged: the 38 remaining errors were
+   **all** in generated/vendored files Biome shouldn't lint (`packages/docs/.source/*`
+   Fumadocs output, the committed `doc/_design_extracted/**` design bundle, and the
+   vendored `.agents/skills/**` Remotion examples — the last seen twice because
+   `.claude/skills/*` symlinks into `.agents`). **Root cause:** Biome 1.9.4's
+   `vcs.useIgnoreFile` only honors the **root** `.gitignore`, but `.source` is
+   ignored by a **nested** `packages/docs/.gitignore`, so Biome linted it anyway.
+   **Fix:** added `**/.source/**`, `**/.agents/**`, `**/.claude/**`, and
+   `doc/_design_extracted/**` to `biome.json` `files.ignore` (alongside the existing
+   `dist`/`build`/`node_modules` patterns). No first-party rebrand file needed a
+   code change — purely a lint-scope correction. `pnpm check` now: "Checked 414
+   files. No fixes applied." (exit 0).
+4. ✅ **`pnpm dev` browser smoke** (demo2 / SmooveStudio on `:5174` — the pinned
+   port; the launch.json `demo` config still declares `:5173`, so drive `:5174`
+   per the standing port gotcha). Verified live: title **"SmooveStudio"**,
+   `.smoove-studio` root + `smoove-studio-portal`, **0** `km-` classes, no
+   "konva-motion" text; computed tokens `--color-accent #ff5640` (coral) /
+   `--color-accent-2 #15cda8` (mint), wordmark **Comfortaa**, body **Hanken
+   Grotesk**; the sidebar `Logo` renders the gradient edge-dot mark (gradient stop
+   `#FF5640`); opening "Circle + fade" navigates to `/c/basic` and mounts the live
+   Konva stage (**2** canvases per-layer + `.konvajs-content`). Screenshot shows
+   the coral selected-row accent, mint active-state icons, and coral/mint timeline
+   scrubber. **Zero console errors.** (The standalone `<smoove-player>` web
+   component itself was verified registered in Phase 3; `pnpm dev` runs the studio
+   demo, not the player.)
+5. ✅ **Residual-token grep clean** — `0` first-party hits for `konva-motion` /
+   `@konva-motion` / `KonvaMotion` / `konvaMotion` / brand `km-` / brand `Km*`
+   across `packages` / `demo` / `doc` / `README.md` / `CLAUDE.md` (excluding this
+   plan, `pnpm-lock`, `dist`/`build`/`.source`, and the design bundle). Bare
+   `konva` / `Konva` guard intact — **37** source files still reference
+   `from "konva"` / `window.Konva` / `Konva.Stage` / `.konvajs-content`.
+6. ✅ **External link references correct** — **17** `github.com/smoove-dev/smoove`
+   refs (0 to the old `smoove/smoove` typo), `https://smoove.dev`, and the unpkg
+   standalone `unpkg.com/@smoove/player/dist/player.global.js`. (URLs in-repo are
+   correct; live DNS resolution wasn't network-tested from the sandbox.)
+
+⏳ **Only remaining item — out-of-session working-folder rename** `konva-motion/`
+→ `smoove/` (deferred since Phase 4): can't be done from inside a session rooted at
+`/Users/rotem/development/konva-motion`. Run `mv konva-motion smoove` from the
+parent dir when nothing holds the path open, then reopen — pure fs move, no in-repo
+references depend on the folder name. **The rebrand is otherwise complete and the
+gate is green.**
 
 ---
 
