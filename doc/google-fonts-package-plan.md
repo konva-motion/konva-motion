@@ -1,10 +1,10 @@
-# `@konva-motion/google-fonts` — design plan
+# `@smoove/google-fonts` — design plan
 
 Status: **proposed** (not yet implemented). A new package that lets users pull any
 Google font as a typed, tree-shakeable `Font` subclass:
 
 ```ts
-import NotoSans from "@konva-motion/google-fonts/noto-sans";
+import NotoSans from "@smoove/google-fonts/noto-sans";
 
 // Selected faces only; omit weights/styles to register all of them.
 const font = new NotoSans({ weights: ["400", "600"], styles: ["normal", "italic"] });
@@ -14,7 +14,7 @@ seq.add(new Text({ font, text: "Hello" }));            // preferred face
 seq.add(new Text({ font: font.face("600"), text: "Hi" }));
 ```
 
-Each font is its own subpath module (`@konva-motion/google-fonts/<slug>`); there
+Each font is its own subpath module (`@smoove/google-fonts/<slug>`); there
 is **no barrel**, so bundlers include only the families a project imports.
 
 ## Decisions (confirmed)
@@ -53,7 +53,7 @@ packages/google-fonts/
   README.md
 ```
 
-`konva` + `@konva-motion/core` are **peer deps** (consumers already pin them); the
+`konva` + `@smoove/core` are **peer deps** (consumers already pin them); the
 package itself has no runtime deps.
 
 ## Exports & tree-shaking (no build)
@@ -70,7 +70,7 @@ runtime condition resolve to the same source file). No per-font entry, no barrel
 }
 ```
 
-So `@konva-motion/google-fonts/noto-sans` → `src/fonts/noto-sans.ts`, which the
+So `@smoove/google-fonts/noto-sans` → `src/fonts/noto-sans.ts`, which the
 consumer's bundler (Vite in the demo/SSR, or any TS-aware bundler) transpiles.
 Generated modules import the base via a relative path (`../runtime.js` — the `.js`
 specifier resolves to `runtime.ts` under `moduleResolution: bundler`/`nodenext`),
@@ -86,7 +86,7 @@ reachable only by its own subpath, importing one font never pulls the others.
 ## Runtime base class (`src/runtime.ts`, hand-written)
 
 ```ts
-import { Font, type FontStyleName } from "@konva-motion/core";
+import { Font, type FontStyleName } from "@smoove/core";
 
 export interface GoogleFontOptions<W extends string = string, S extends string = string> {
   /** Weights to register. Omit → all weights this family provides. */
@@ -116,7 +116,7 @@ function selectFaces(family: string, faces: FaceMap, options?: GoogleFontOptions
     out.push({ weight, style, src });
   }
   if (out.length === 0) {
-    throw new Error(`@konva-motion/google-fonts: "${family}" — no faces match the selected weights/styles.`);
+    throw new Error(`@smoove/google-fonts: "${family}" — no faces match the selected weights/styles.`);
   }
   return out;
 }
@@ -160,7 +160,7 @@ exists.)
 
 ## Generation script (`scripts/generate.ts`)
 
-Run by maintainers/CI: `GOOGLE_FONTS_API_KEY=… pnpm --filter @konva-motion/google-fonts generate`.
+Run by maintainers/CI: `GOOGLE_FONTS_API_KEY=… pnpm --filter @smoove/google-fonts generate`.
 
 1. `GET https://www.googleapis.com/webfonts/v1/webfonts?key=$KEY&capability=WOFF2&sort=alpha`.
 2. For each `item` (`{ family, variants, files, subsets }`):
@@ -185,7 +185,7 @@ The script is the only thing that needs network/key; the published package is st
   tiny modules is cheap. (If editor indexing ever drags, the `typecheck` can scope
   to `src/runtime.ts` + a sample, since the generated modules are mechanical.)
 - Consumers resolve the package as source via the `exports` `.ts` paths; Vite
-  transpiles for both browser and SSR. The `@konva-motion/vite` `serverAssets`
+  transpiles for both browser and SSR. The `@smoove/vite` `serverAssets`
   rewrite is irrelevant here — `src` values are already remote URLs, which the
   core loaders handle on both sides.
 - Demo: add a `compositions/google-font` scene importing one family to exercise it
@@ -215,7 +215,7 @@ Developer API still supplies the family catalog.
 ## Implementation checklist
 
 1. Scaffold `packages/google-fonts` — `package.json` (wildcard `exports` → `src/*.ts`,
-   peer deps `konva` + `@konva-motion/core`, no `build`, a `generate` script), and a
+   peer deps `konva` + `@smoove/core`, no `build`, a `generate` script), and a
    non-composite `tsconfig.json`. Add to `pnpm-workspace.yaml` if not auto-globbed.
 2. `src/runtime.ts` — `GoogleFont` base + `selectFaces` + option types.
 3. `scripts/generate.ts` — Developer API → `src/fonts/*.ts` + `src/manifest.ts`.

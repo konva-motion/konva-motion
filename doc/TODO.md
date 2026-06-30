@@ -1,6 +1,6 @@
 # TODO / Backlog
 
-Tracked work for konva-motion. Each item: **what**, **why**, **where** (code
+Tracked work for smoove. Each item: **what**, **why**, **where** (code
 pointers), and **acceptance** notes. Ordered roughly by the original capture, not
 priority.
 
@@ -42,7 +42,7 @@ starts outside it.
 
 ## 2. Agent skill: video creation
 
-**What** — A Claude Code skill that authors a konva-motion video end to end
+**What** — A Claude Code skill that authors a smoove video end to end
 (scaffold a composition, add sequences/shapes/media, render).
 
 **Why** — Lower the barrier to producing a video with the library; give agents a
@@ -54,14 +54,14 @@ see `skills-lock.json`). Should lean on the public barrel API in
 ([packages/renderer](../packages/renderer)).
 
 **Acceptance** — Skill produces a runnable composition file and can render it to
-mp4 via `@konva-motion/renderer`. Cross-reference item **3** (API usage skill) so
+mp4 via `@smoove/renderer`. Cross-reference item **3** (API usage skill) so
 they share one canonical API description.
 
 ---
 
 ## 3. Skill: how to use the motion API
 
-**What** — A reference/usage skill documenting the konva-motion authoring API
+**What** — A reference/usage skill documenting the smoove authoring API
 (Composition, Sequence, Flex/Block, shapes, interpolate/easing, media, transitions).
 
 **Why** — Companion to item **2**: the "how to create a video" skill needs an
@@ -181,7 +181,7 @@ docs.
 **What** — Provide a way to turn off all Konva event handling (hit graph + click/
 tap listening) so playback and rendering don't pay for hit detection.
 
-**Why** — konva-motion is timeline-driven, not interactive: the stage is drawn
+**Why** — smoove is timeline-driven, not interactive: the stage is drawn
 each tick but nothing needs pointer hit-testing. Konva builds and maintains a hit
 graph and pointer listeners by default, which is wasted CPU/memory per
 `batchDraw`. Disabling it should speed up playback (especially many shapes) and

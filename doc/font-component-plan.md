@@ -2,7 +2,7 @@
 
 Status: **proposed** (not yet implemented). Two coupled features:
 
-1. A new **`Font`** node (`@konva-motion/core`) that declares a font family +
+1. A new **`Font`** node (`@smoove/core`) that declares a font family +
    faces, loads them in an environment-aware way, and is consumed by `Text`.
 2. A **buffer state** on `Composition` so a player can wait for assets (fonts,
    and later images/video) to be ready before playback starts.
@@ -208,7 +208,7 @@ export class Font extends Konva.Group {
     this._loadPromise = Promise.all(
       this.faces.map((f) => loader(this.family, f)),
     ).then(() => { this._loaded = true; }).catch((err) => {
-      console.error("[konva-motion] Font load failed:", err);
+      console.error("[smoove] Font load failed:", err);
     });
     return this._loadPromise;
   }
@@ -324,7 +324,7 @@ export function makeSkiaFontLoader(cacheDir: string): FontLoader {
 }
 ```
 
-`setupServerRendering({ fontCacheDir })` (default `os.tmpdir()/konva-motion-fonts`)
+`setupServerRendering({ fontCacheDir })` (default `os.tmpdir()/smoove-fonts`)
 calls `setDefaultFontLoader(makeSkiaFontLoader(cacheDir))`. The existing
 `registerFonts(opts.fonts)` path stays for setup-time fonts.
 
@@ -450,7 +450,7 @@ which already holds the non-media `TICK_MARK`.
   *selection* by exact weight string needs a rule (treat a range as matching any
   contained weight?). Deferred unless needed now.
 - **`face.src` preview vs server**: ✅ handled. A build-local `?url` import is
-  rewritten to an absolute fs path in the SSR build by `@konva-motion/vite`
+  rewritten to an absolute fs path in the SSR build by `@smoove/vite`
   (`serverAssets` regex now covers `woff2?|ttf|otf`; the `?url` query is stripped
   before matching), which the skia loader reads directly. Remote `http(s)` srcs
   also "just work" on both sides — the browser fetches them, the skia loader

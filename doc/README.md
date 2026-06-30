@@ -1,4 +1,4 @@
-# konva-motion
+# smoove
 
 Remotion-style timeline-driven animation for [Konva](https://konvajs.org).
 
@@ -12,12 +12,12 @@ on the server, step frames manually with `setFrame(n)`.
 
 Chain scenes back-to-back with [`Series`](#new-seriesopts), and overlap them
 with cross-fades, wipes and WebGL shader transitions via
-[`@konva-motion/transitions`](./transitions.md).
+[`@smoove/transitions`](./transitions.md).
 
 ## Install
 
 ```sh
-pnpm add @konva-motion/core konva
+pnpm add @smoove/core konva
 ```
 
 `konva` is a peer dependency — you pin the version.
@@ -25,7 +25,7 @@ pnpm add @konva-motion/core konva
 ## Quick example
 
 ```ts
-import { Composition, Sequence } from "@konva-motion/core";
+import { Composition, Sequence } from "@smoove/core";
 import Konva from "konva";
 
 const comp = new Composition({
@@ -76,7 +76,7 @@ comp.play();
   runtimes there's no DOM, so frames are driven with `setFrame`/`renderFrame`.
 
 The instance **is** a `Konva.Stage`. Adds itself to the stage via a
-`__KonvaMotionComposition` marker; constructing a second composition on the
+`__SmooveComposition` marker; constructing a second composition on the
 same underlying stage throws.
 
 **Readonly signals** (`{ get(): T; subscribe(fn): () => void }`):
@@ -160,7 +160,7 @@ comp.add(series); // equivalent to: for (const seq of series.sequences()) comp.a
 ```
 
 For overlapping scenes with cross-fades, wipes and shader effects, see
-[`@konva-motion/transitions`](./transitions.md) — its `TransitionSeries` builds
+[`@smoove/transitions`](./transitions.md) — its `TransitionSeries` builds
 on the same offset engine.
 
 ### `getComposition(stage)`
@@ -178,7 +178,7 @@ Maps `input` from `inputRange` onto `outputRange`. API-compatible with
   (default), `"identity"`, `"clamp"`, or `"wrap"`.
 
 ```ts
-import { interpolate, Easing } from "@konva-motion/core";
+import { interpolate, Easing } from "@smoove/core";
 
 main.register((frame) => {
   const x = interpolate(frame, [0, 300], [100, 700], {
@@ -198,7 +198,7 @@ clamped on both sides. API-compatible with
 [Remotion's `interpolateColors`](https://www.remotion.dev/docs/interpolate-colors).
 
 ```ts
-import { interpolateColors } from "@konva-motion/core";
+import { interpolateColors } from "@smoove/core";
 
 main.register((frame) => {
   circle.fill(interpolateColors(frame, [0, 150, 300], ["red", "yellow", "blue"]));
@@ -228,7 +228,7 @@ constructed a `Composition` named `comp` and a root `Sequence` named `main`
 Drive any Konva setter from `interpolate` inside `main.register`:
 
 ```ts
-import { interpolate, Easing } from "@konva-motion/core";
+import { interpolate, Easing } from "@smoove/core";
 
 main.register((frame) => {
   node.opacity(
@@ -325,7 +325,7 @@ Slice the target string against frames:
 
 ```ts
 const CHARS_PER_FRAME = 2;
-const message = "Hello from konva-motion.";
+const message = "Hello from smoove.";
 const text = new Konva.Text({ x: 24, y: 24, text: "", fontSize: 20, fill: "#fff" });
 const caret = new Konva.Rect({ x: 24, y: 24, width: 2, height: 24, fill: "#fff" });
 main.add(text); main.add(caret);
@@ -375,7 +375,7 @@ flash.register((local) => { /* local: 0..29 */ });
 The layer is `visible(false)` and not drawn outside its range — no manual
 opacity gating needed.
 
-## Player (`@konva-motion/player`)
+## Player (`@smoove/player`)
 
 A framework-agnostic **web-component player** (built with Lit) that plays a
 `Composition` like an HTML5 `<video>` — letterbox-scaling it to its box,
@@ -384,8 +384,8 @@ The composition is passed as a **property** (it's an object), and the player
 re-parents the stage into its own canvas via Konva's `setContainer`.
 
 ```ts
-import "@konva-motion/player"; // registers <smoove-player> and the controls
-import "@konva-motion/player/styles.css"; // opt-in default styling (headless without it)
+import "@smoove/player"; // registers <smoove-player> and the controls
+import "@smoove/player/styles.css"; // opt-in default styling (headless without it)
 
 const player = document.querySelector("smoove-player");
 player.composition = comp; // Composition — no container needed; core makes one
@@ -405,7 +405,7 @@ accepts:
 
 ```ts
 // bouncing.js (the remote module)
-import { Composition, Sequence } from "@konva-motion/core";
+import { Composition, Sequence } from "@smoove/core";
 const comp = new Composition({ id: "bouncing", fps: 60, durationInFrames: 120 });
 // …build the scene…
 export default comp; // or: export default () => comp / async () => comp
@@ -499,7 +499,7 @@ A sampling of what's in the library:
 
 ## Flex layout
 
-`@konva-motion/core` ships `Flex`, `Block`, `Image`, and `Text`, plus a
+`@smoove/core` ships `Flex`, `Block`, `Image`, and `Text`, plus a
 flex-aware wrapper for **every Konva shape** (see [Shapes](#shapes)) — all
 wired to a synchronous flexbox engine
 ([flexily](https://github.com/beorn/flexily)). When a `Flex` (or `Block`) sits
@@ -509,7 +509,7 @@ driven by an open contract (`KMLayoutNode`), so the engine never hard-codes a
 list of supported node types — see [Custom shapes](#custom-shapes--the-layout-contract).
 
 ```ts
-import { Flex, Block, Image } from "@konva-motion/core";
+import { Flex, Block, Image } from "@smoove/core";
 import Konva from "konva";
 
 const card = new Flex({
@@ -575,12 +575,12 @@ main.add(card);
 
 ### Shapes
 
-`@konva-motion/core` also re-exports every Konva drawing primitive as a
+`@smoove/core` also re-exports every Konva drawing primitive as a
 flex-aware wrapper — same name, same config, plus the flex child props and
 `px`/`%` `width`/`height` size values:
 
 ```ts
-import { Flex, Rect, Circle, Star } from "@konva-motion/core";
+import { Flex, Rect, Circle, Star } from "@smoove/core";
 
 const row = new Flex({ flexDirection: "row", gap: 24, alignItems: "center" });
 row.add(new Rect({ width: 140, height: 140, fill: "#38bdf8", cornerRadius: 16 }));
@@ -599,8 +599,8 @@ Wrapped shapes: `Rect`, `Circle`, `Ellipse`, `Line`, `Arrow`, `Star`, `Ring`,
   `flexGrow`-driven stretch can distort them — give those an explicit size (or
   leave them un-stretched) for predictable results.
 
-Because konva-motion re-exports the whole drawing vocabulary, an app can import
-everything from `@konva-motion/core` and never reach for `Konva.*` shapes
+Because smoove re-exports the whole drawing vocabulary, an app can import
+everything from `@smoove/core` and never reach for `Konva.*` shapes
 directly.
 
 ### Custom shapes & the layout contract
@@ -626,7 +626,7 @@ config stripping, so the wrapper is a one-liner:
 
 ```ts
 import Konva from "konva";
-import { FlexShape, type LeafConfig } from "@konva-motion/core";
+import { FlexShape, type LeafConfig } from "@smoove/core";
 
 type MyConfig = Omit<Konva.MyShapeConfig, "width" | "height"> & LeafConfig;
 class MyShape extends FlexShape<Konva.MyShape, MyConfig>(Konva.MyShape) {}
@@ -675,7 +675,7 @@ dragged, resuming on release), and play/loop/volume map to
 other primitive and contributes its (fit-aware) intrinsic size to layout.
 
 ```ts
-import { Text } from "@konva-motion/core";
+import { Text } from "@smoove/core";
 
 // Auto-size the font so the whole phrase fills a fixed box.
 seq.add(new Text({
@@ -752,7 +752,7 @@ before playback** so text never flashes a fallback glyph. Pass the `Font` (or a
 specific face) to a `Text` via the `font` option.
 
 ```ts
-import { Composition, Sequence, Font, Text } from "@konva-motion/core";
+import { Composition, Sequence, Font, Text } from "@smoove/core";
 import regular from "./MyFont-Regular.woff2?url";
 import italic from "./MyFont-Italic.woff2?url";
 import bold from "./MyFont-Bold.woff2?url";
@@ -810,12 +810,12 @@ comp.play();            // auto-defers if still buffering
 **Server rendering.** `setupServerRendering()` installs a skia-canvas font loader
 that registers scene `Font`s headlessly (no DOM `@font-face`). Remote `src` URLs
 are downloaded once into a disk cache (`fontCacheDir`, default
-`os.tmpdir()/konva-motion-fonts`) and reused across frames and runs. Setup-time
+`os.tmpdir()/smoove-fonts`) and reused across frames and runs. Setup-time
 fonts can still be registered up front via the `fonts` option.
 
 ## Audio
 
-`@konva-motion/core` ships an `Audio` node for timeline-driven sound, controlled
+`@smoove/core` ships an `Audio` node for timeline-driven sound, controlled
 by a composition-level **mixer**. Like Remotion's `<Audio>`, you place it inside
 a `Sequence` and it plays only while the playhead is in that sequence's range,
 trimmed/looped/rate-adjusted to taste. `Audio` is an invisible `Konva.Group`, so
@@ -823,7 +823,7 @@ it lives in the scene tree and is discovered, range-gated, and synced exactly
 like `Video` — it just produces no pixels.
 
 ```ts
-import { Composition, Sequence, Audio } from "@konva-motion/core";
+import { Composition, Sequence, Audio } from "@smoove/core";
 
 const music = new Sequence({ from: 0, durationInFrames: 300 });
 music.add(new Audio({ src: "/theme.mp3", volume: 0.6, trimAfter: 300, loop: true }));
@@ -908,17 +908,17 @@ for (let f = 0; f < comp.durationInFrames.get(); f++) await comp.renderFrame(f);
 const audio = comp.getAudioAssets(); // feed to your mux pass
 ```
 
-### `@konva-motion/renderer` — video output
+### `@smoove/renderer` — video output
 
-For the batteries-included path, `@konva-motion/renderer` rasterizes a
+For the batteries-included path, `@smoove/renderer` rasterizes a
 composition headlessly with [skia-canvas](https://skia-canvas.org) and encodes to
 a video file with ffmpeg — no browser, no bundler. It owns the frame loop, pipes
 raw RGBA to ffmpeg, and muxes the collected audio in one go.
 
 ```ts
-import "@konva-motion/renderer/register"; // BEFORE building the comp
-import { Composition, Sequence, Audio } from "@konva-motion/core";
-import { renderComposition } from "@konva-motion/renderer";
+import "@smoove/renderer/register"; // BEFORE building the comp
+import { Composition, Sequence, Audio } from "@smoove/core";
+import { renderComposition } from "@smoove/renderer";
 
 const comp = new Composition({ id: "demo", fps: 30, durationInFrames: 90, width: 1280, height: 720, mode: "rendering" });
 // ...add sequences, shapes, Image, Audio...
@@ -931,7 +931,7 @@ const result = await renderComposition(comp, {
 // { output, width, height, frames, durationInSeconds, hasAudio }
 ```
 
-`import "@konva-motion/renderer/register"` (or calling `setupServerRendering()`)
+`import "@smoove/renderer/register"` (or calling `setupServerRendering()`)
 must run **before** constructing the composition: it installs the konva skia
 backend, sets the rendering flag, and registers Node-safe media sources +
 image loader so `Image`/`Audio`/`Video` nodes build without a DOM.

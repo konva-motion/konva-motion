@@ -72,5 +72,5 @@ existing mount/bind path** in `packages/player/src/smoove-player.ts` (the
 - Setting `src=""` / removing it does **not** tear down a running composition;
   a new `src` swaps it.
 - Verification: build the player package
-  (`pnpm --filter @konva-motion/player build`) and typecheck. An optional
+  (`pnpm --filter @smoove/player build`) and typecheck. An optional
   end-to-end demo (serving a composition as a standalone module) can be added.

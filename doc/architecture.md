@@ -4,7 +4,7 @@ A pnpm monorepo with two published packages and one local demo app.
 
 ## Packages
 
-### `@konva-motion/core`
+### `@smoove/core`
 
 The engine. Exports `Composition`, `Sequence`, signal types, and a tiny
 typed emitter. Declares `konva` as a **peer dependency** so the consuming
@@ -30,7 +30,7 @@ references are read off `globalThis` with fallbacks, so importing core in
 Node doesn't throw. `play()` throws a clear error in non-browser
 environments; `setFrame(n)` works anywhere for offline / server rendering.
 
-### `@konva-motion/timeline`
+### `@smoove/timeline`
 
 Planned home for React UI components that show and control a composition
 (scrubber, play button, time display). Currently a placeholder.
@@ -74,7 +74,7 @@ since otherwise a queued rAF callback could fire against a torn-down stage.
 
 ## Singleton enforcement
 
-A composition marks its underlying Stage with a `__KonvaMotionComposition`
+A composition marks its underlying Stage with a `__SmooveComposition`
 property. Constructing a second `Composition` over the same Stage throws —
 useful if you ever wrap an existing stage. Use `getComposition(stage)` to
 read the marker.
@@ -115,7 +115,7 @@ behind.
 ### Shape wrappers (`FlexShape`)
 
 `FlexShape(Konva.X)` (`layout/flex/mixin.ts`) returns a leaf-contract subclass:
-it strips konva-motion-only config keys, records the flex child props +
+it strips smoove-only config keys, records the flex child props +
 `px`/`%` size values as attrs, measures via `getSelfRect()`, and writes back
 with origin correction. Each shape in `layout/shapes.ts` is then a one-liner.
 

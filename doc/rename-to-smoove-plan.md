@@ -287,7 +287,7 @@ standalone bundle).
   preview harness's `:5173`) busy it landed on `:5175`. Drive the preview at the
   port the dev log prints, not `:5173`.
 
-## Phase 4 — Folder, docs & prose sweep
+## Phase 4 — Folder, docs & prose sweep ✅ DONE (2026-06-30) — folder rename deferred
 
 - Rename the working folder `konva-motion/` → `smoove/` (local; harmless to
   tooling).
@@ -302,6 +302,81 @@ standalone bundle).
 **Verify:** `pnpm check` (Biome) passes; `grep -rn` finds **zero** residual
 `konva-motion` / `@konva-motion` / `KonvaMotion` / `km-` tokens (excluding bare
 `konva` / `Konva`).
+
+**Status / notes:**
+
+- **Method: one ordered blanket `perl -i` sweep** across **55 prose/code files**
+  (longest-token-first so bare `konva`/`Konva` are never touched):
+  `@konva-motion/` → `@smoove/`; `KonvaMotion` → `Smoove`; `konvaMotion` →
+  `smoove` (the camelCase vite-plugin token the Phase 2 notes flagged for a prose
+  pass — `konvaMotion()` call sites in `vite-plugin/*.mdx` now read `smoove()`);
+  `konva-motion` → `smoove`; `km-` → `smoove-` (lowercase only). Scope: every
+  tracked `.md` / `.mdx` / `README` + `CLAUDE.md`, the css **header comments** in
+  `player.css` / `studio.css` / docs `base.css` / `home.css`, the tracked
+  `.claude/launch.json` (`@smoove/docs` debug target) and the repo
+  `memory/skia-canvas-leak-root-cause.md` note. `doc/TODO.md` was swept **by hand**
+  (5 prose hits) so its asset-filename lines 88–89 survive for Phase 5.
+- ⚠️ **Real bug fixed (not prose):** `packages/player/src/smoove-player.ts`
+  compared `c.tagName === "KM-PLAYER-CONTROLS"`. DOM `tagName` is **uppercase**, so
+  Phase 3's lowercase `km-` sweep never matched it — after Phase 3 the element is
+  `<smoove-player-controls>` and that check was silently **always false**, breaking
+  default-control reconciliation (`_reconcileControls`). Corrected to
+  `"SMOOVE-PLAYER-CONTROLS"`. A repo-wide case-sensitive `\bKM-` grep confirms no
+  other uppercase tag-name comparisons remain.
+- **Org / domain / CDN URLs were already correct** — Phase 1 wrote
+  `github.com/smoove-dev/smoove` + `https://smoove.dev` into the publishable
+  `package.json`s, and the `unpkg` / `jsdelivr` / `@konva-motion/player` doc refs
+  flipped to `@smoove/player` for free via the `@konva-motion/` sub. The `exports`
+  subpaths (`./standalone`, `./styles.css`, …) kept their relative names as planned.
+- **Guard / preserved on purpose:** the **Remotion attribution URLs**
+  (`github.com/remotion-dev/…`, `raw.githubusercontent.com/remotion-dev/…`) contain
+  none of the brand tokens, so they were never at risk — upstream credit intact.
+  The `picsum.photos/seed/konva-motion` demo seed → `seed/smoove` (cosmetic seed
+  string only). Bare `konva` / `Konva` / `window.Konva` / `from "konva"` /
+  `.konvajs-content` all untouched.
+- **`pnpm check` — clean for everything in this rebrand's purview.** Phases 1–3
+  gated on `pnpm build` (which ignores formatting), so Biome had never run; the
+  `@smoove` rename also reordered imports (k→s) and re-wrapped some lines past the
+  100-col width. Cleaned that **rename-induced drift** with `biome check --write`
+  (safe fixes only) across ~18 tracked source files — incl. `smoove-player.ts`,
+  `core/engine/environment.ts`, the two `vite.config.ts`, `studio/schema/kf.ts`,
+  and the `packages/docs/src/**` demos/components — plus one pre-existing
+  `useSelfClosingElements` nit in `docs/src/routes/home.tsx`. **Biome on every
+  Phase-4-touched file is green.**
+- ⚠️ **`pnpm check` still reports ~13 PRE-EXISTING errors, all unrelated to the
+  rebrand**, in two buckets left untouched: **9** in the **gitignored, generated**
+  `packages/docs/.source/*` (Fumadocs output — Biome shouldn't lint it; fix is a
+  config gap, e.g. enable `vcs.useIgnoreFile` or ignore `.source`), and **4** in
+  the **vendored** `.agents/skills/remotion-best-practices/rules/assets/*.tsx`
+  (third-party example code, no brand tokens). Neither is Phase 4's job — **flag
+  for Phase 9** (decide: biome-ignore both vs. accept). So `pnpm check` is *not*
+  globally exit-0 yet, but no first-party rebrand file contributes to that.
+- **DEFERRED to Phase 5 (so the "zero residual" grep can't be literally hit in
+  Phase 4 alone):** the brand **asset files** still named/captioned `konva-motion`
+  — `assets/konva-motion-{icon-afterimages,icon-circle,mark-black,mark-gradient,mark-white}.svg`
+  and `packages/docs/public/favicon.svg` (each has `aria-label="konva-motion"`
+  inside) — plus the two asset-filename reference lines in `doc/TODO.md:88–89`.
+  Phase 5 replaces these assets and their references, so they were intentionally
+  not swept here.
+- **Binary media** (`demo/**` + `packages/renderer/examples/**` `.mp3`/`.mp4`)
+  show up in a raw `grep` as "Binary file … matches" — coincidental byte
+  sequences inside encoded audio/video, **not** brand tokens. Not editable, not
+  touched.
+- `.claude/settings.local.json` (gitignored, local) still holds one
+  `@konva-motion/core` *permission* entry; the auto-mode classifier blocked editing
+  permission rules and it's out of repo scope anyway. Harmless — it just won't
+  auto-match the renamed `@smoove/core` build command. The `km-design` temp-dir
+  paths in that file are not brand tokens.
+- ⏳ **NOT DONE — working-folder rename `konva-motion/` → `smoove/`.** Can't be done
+  from inside this session: the live working directory is
+  `/Users/rotem/development/konva-motion`, and renaming it mid-session breaks the
+  cwd, every absolute tool path, and the running dev server. **Do it out-of-session**
+  (`mv konva-motion smoove` from the parent dir, or via the editor) when nothing
+  holds the path open, then reopen. Pure-fs move — no in-repo references depend on
+  the folder name.
+- ✅ `pnpm build` re-run green (exit 0) after the source edits; residual
+  brand-token grep clean except the deferred Phase 5 assets + binary-media false
+  positives above.
 
 ---
 

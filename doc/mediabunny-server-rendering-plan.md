@@ -1,4 +1,4 @@
-# Plan: Mediabunny on the server (`@konva-motion/renderer`)
+# Plan: Mediabunny on the server (`@smoove/renderer`)
 
 Status: **implemented**. The renderer now encodes/decodes/muxes through Mediabunny
 (`@mediabunny/server`); the ffmpeg CLI and `@ffmpeg-installer` are gone. See

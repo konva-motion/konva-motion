@@ -1,4 +1,4 @@
-# `@konva-motion/studio` — design
+# `@smoove/studio` — design
 
 Status: **plan** (no code yet). This documents the intended shape of a new
 `packages/studio` package. It generalizes two inputs into one reusable,
@@ -28,7 +28,7 @@ a catalog of compositions on the left, a live `<smoove-player>` preview in the
 center, an auto-generated props form, a scrubber, and a **Render** button that
 produces an MP4 — and then **extend or replace any piece of it**.
 
-North star: **Storybook, but for your konva-motion videos, and fully
+North star: **Storybook, but for your smoove videos, and fully
 customizable.** Not a framework — an easy, themeable way to browse, tweak, and
 render the compositions you already wrote.
 
@@ -42,7 +42,7 @@ Two halves ship from one package:
   CLI). Studio bakes in **no transport**.
 
 **The keystone is a shared, isomorphic registry of id-keyed entries.** Each
-entry is `{ id, …metadata, load(props) }`, where `load` returns a konva-motion
+entry is `{ id, …metadata, load(props) }`, where `load` returns a smoove
 `core.Composition` (possibly async, for lazy/code-split compositions). The
 **`id` is mandatory** and is the stable key shared by the frontend and the
 render backend — both import the same registry module and address a composition
@@ -85,7 +85,7 @@ packages/studio
       probe.ts                # (registry, id) -> CompositionInfo
       createRenderQueue.ts    # optional in-memory job queue w/ progress events
       handleRenderRequest.ts  # pure (req, {registry, backend}) -> result|stream — no HTTP
-      defaultBackend.ts       # RenderBackend backed by @konva-motion/renderer (optional/peer dep)
+      defaultBackend.ts       # RenderBackend backed by @smoove/renderer (optional/peer dep)
 
     components/               # React — ONE directory per component, built on Base UI
       Studio/                 # root provider; owns StudioContext
@@ -128,18 +128,18 @@ packages/studio
 
 **Hard rule (mirrors how `core`/`renderer` stay framework-agnostic):**
 `./registry` and `./render` must never import React or anything DOM-only. A
-render worker does `import { renderEntry } from "@konva-motion/studio/render"`
+render worker does `import { renderEntry } from "@smoove/studio/render"`
 and `import registry from "./compositions"` without dragging in React. Only the
-`.` entry pulls React + `@konva-motion/player`.
+`.` entry pulls React + `@smoove/player`.
 
 ### Dependencies
 
 | Dep | Kind | Why |
 | --- | --- | --- |
-| `@konva-motion/core` | peer | compositions, signals, `setFrame` |
+| `@smoove/core` | peer | compositions, signals, `setFrame` |
 | `react` / `react-dom` | peer | UI half only |
-| `@konva-motion/player` | peer | `<smoove-player>` preview host |
-| `@konva-motion/renderer` | **optional** peer | only the *default* backend uses it; users can supply their own |
+| `@smoove/player` | peer | `<smoove-player>` preview host |
+| `@smoove/renderer` | **optional** peer | only the *default* backend uses it; users can supply their own |
 | `konva` | peer | transitive, pinned by consumer |
 | `@base-ui-components/react` | dep | **headless UI primitives** the components are built on (Dialog, Menu, Select, Tabs, Slider, Switch, Toast, NumberField…) — accessible + Floating-UI positioned, unstyled |
 | `zod` | dep | the `kf` schema DSL |
@@ -202,9 +202,9 @@ selecting an entry (or hitting its route) triggers the load and flips its status
 
 ```ts
 // registry.ts — imported by the studio UI AND the render worker.
-// With the @konva-motion/vite plugin, HMR is injected automatically — you never
+// With the @smoove/vite plugin, HMR is injected automatically — you never
 // write `import.meta.hot`.
-import { defineRegistry } from "@konva-motion/studio";
+import { defineRegistry } from "@smoove/studio";
 export default defineRegistry([
   // each module default-exports its Composition (which owns a `props` signal)
   { id: "intro", title: "Intro", group: "Brand",
@@ -301,8 +301,8 @@ the same `--smoove-*` variables as the rest of the shell; the player's
 `<smoove-player-*>` control elements remain available for anyone who prefers them.
 
 ```tsx
-import { Studio } from "@konva-motion/studio";
-import "@konva-motion/studio/styles.css";
+import { Studio } from "@smoove/studio";
+import "@smoove/studio/styles.css";
 import registry from "./compositions";
 
 <Studio registry={registry} render={myTransport}>
@@ -344,7 +344,7 @@ framework.* So `render/` exposes **pure orchestration functions** plus a
 the user's to write (and is symmetric on the client via an injected function).
 
 ```ts
-// @konva-motion/studio/render
+// @smoove/studio/render
 
 export interface RenderBackend {
   render(comp: Composition, opts: RenderOptions): Promise<RenderResult>;
@@ -352,7 +352,7 @@ export interface RenderBackend {
   // progress flows through opts.onProgress (RenderProgress), same as renderer
 }
 
-/** Default backend wraps @konva-motion/renderer (optional peer dep). */
+/** Default backend wraps @smoove/renderer (optional peer dep). */
 export function defaultBackend(): RenderBackend;
 
 /** The core "do the work" function: look up the entry, build it with props,
@@ -409,7 +409,7 @@ render *functions* themselves stay transport-free; `onProgress` is how a
 server-side caller observes progress before it forwards it however it likes.
 
 This is the "implement the render backend as you like" requirement: the default
-backend gets you rendering immediately via `@konva-motion/renderer`; a custom
+backend gets you rendering immediately via `@smoove/renderer`; a custom
 `RenderBackend` (Lambda, a render farm, a different encoder) plugs in without
 touching the UI or the registry.
 
@@ -432,7 +432,7 @@ extraction works and the live example:
 | `styles.css` | `styles/studio.css` (Tailwind, CSS-var themed) |
 
 The render half is new (the demo has no render button today); it builds on the
-existing `@konva-motion/renderer` API (`renderComposition`, `renderToStream`,
+existing `@smoove/renderer` API (`renderComposition`, `renderToStream`,
 `renderStill`, `probeComposition`, `RenderOptions`/`RenderResult`).
 
 ---
@@ -447,8 +447,8 @@ existing `@konva-motion/renderer` API (`renderComposition`, `renderToStream`,
 - Register in root `tsconfig.json` references and `pnpm-workspace.yaml`
   (already globs `packages/*`, so just the tsconfig reference + `pnpm build`).
 - Tailwind compiles to a static `studio.css` at build time so consumers need no
-  Tailwind setup — they `import "@konva-motion/studio/styles.css"`, exactly the
-  opt-in-styles pattern `@konva-motion/player` uses.
+  Tailwind setup — they `import "@smoove/studio/styles.css"`, exactly the
+  opt-in-styles pattern `@smoove/player` uses.
 - Biome via the root config; no per-package config.
 - Update `doc/README.md` once the public API stabilizes.
 
@@ -681,7 +681,7 @@ real build:
   re-targeting it at those parts.
 - **Styles scope.** Ship the CSS under a `.smoove-studio` root wrapper (vars +
   scoped selectors) so the opt-in `styles.css` doesn't touch the host page —
-  same opt-in pattern as `@konva-motion/player`. Base UI portals (menus,
+  same opt-in pattern as `@smoove/player`. Base UI portals (menus,
   dialogs, toasts) render to `document.body` by default — render them into a
   studio-owned portal container (or add the `.smoove-studio` class to the portal)
   so the scoped styles + theme vars still apply.

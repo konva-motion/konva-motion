@@ -1,6 +1,6 @@
-# Implementation prompt — parallel rendering for `@konva-motion/renderer`
+# Implementation prompt — parallel rendering for `@smoove/renderer`
 
-> Paste into a fresh Claude Code session in the `konva-motion` repo. Self-contained.
+> Paste into a fresh Claude Code session in the `smoove` repo. Self-contained.
 > Goal: add **parallel rendering to `renderComposition`** (default on) where many
 > processes produce **visual frames** and a **single ffmpeg** stitches raw frames →
 > encoded video + muxed audio in one pass. (A prior segmented/concat attempt was
@@ -25,7 +25,7 @@
 
 ## Why this exists (read first — but see the premise update above)
 
-`@konva-motion/renderer` rasterizes a konva-motion `Composition` headlessly with
+`@smoove/renderer` rasterizes a smoove `Composition` headlessly with
 **skia-canvas** and encodes with **ffmpeg**. Single-process rendering works
 (`renderComposition`). It *used to* leak native memory on video renders — every
 uncleared per-frame blit retained an `SkImage` for the process lifetime — which
@@ -297,4 +297,4 @@ pre-existing latent offset bug; out of scope here, fix separately if needed.)
 pnpm workspaces; `core` extends Konva (konva is a peerDep, now `>=10`); build =
 `tsc -b` per package; Biome (`pnpm check`/`pnpm format`); public API via the
 barrel `src/index.ts`; `./register` subpath = `setupServerRendering()`. Examples
-run via `tsx`; build before running (`pnpm --filter @konva-motion/renderer build`).
+run via `tsx`; build before running (`pnpm --filter @smoove/renderer build`).

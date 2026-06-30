@@ -94,7 +94,7 @@ rendering.
 - Verify `pnpm build` across all packages and a server render still works.
 
 ## Dependencies
-- Add `mediabunny` as a regular dep of `@konva-motion/core` (pure JS, no WASM,
+- Add `mediabunny` as a regular dep of `@smoove/core` (pure JS, no WASM,
   tree-shakable, ~30–70 kB gzipped). No `@mediabunny/*` encoder add-ons needed — browser
   decode uses native WebCodecs.
 
@@ -125,7 +125,7 @@ Landed:
   self-play branches and the `isPlaying` subscription removed.
 - `runtime-defaults.ts` now defaults the browser video factory to `MediabunnyVideoSource`.
   `BrowserVideoSource` is retained (unwired) for the future `cannot-decode` fallback.
-- `mediabunny@^1.49.0` added as a regular dep of `@konva-motion/core`.
+- `mediabunny@^1.49.0` added as a regular dep of `@smoove/core`.
 
 Verified in the demo (`/c/video-sync`, `pnpm dev`): the decoded top clip's burnt-in SMPTE
 timecode reads exactly `00:00:02:00` at frame 60 (30fps); pixel hashes show stepping
@@ -259,7 +259,7 @@ Per phase, in the demo via the preview tools:
   fails with a clear error.
 - **`AudioContext` autoplay unlock** — the scheduler calls `resume()` on first play; when
   `play()` is invoked from the player's button (a user gesture) the context unlocks.
-  `SharedAudioContext.resume()` is the single seam if `@konva-motion/player` ever needs to
+  `SharedAudioContext.resume()` is the single seam if `@smoove/player` ever needs to
   wire it more explicitly.
 
 ## Files changed

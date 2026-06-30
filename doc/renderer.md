@@ -1,6 +1,6 @@
-# `@konva-motion/renderer`
+# `@smoove/renderer`
 
-Headless server renderer for konva-motion. It rasterizes a live `Composition`
+Headless server renderer for smoove. It rasterizes a live `Composition`
 frame-by-frame with [skia-canvas](https://skia-canvas.org) (via konva 10's
 official `konva/skia-backend`), then encodes and muxes video + audio with
 [Mediabunny](https://mediabunny.dev) — all in Node, no browser, no bundler, **no
@@ -20,7 +20,7 @@ So FFmpeg still does the codec work, but **in-process** — there is no spawned
 ## Install
 
 ```sh
-pnpm add @konva-motion/renderer @konva-motion/core konva
+pnpm add @smoove/renderer @smoove/core konva
 ```
 
 `skia-canvas` (the konva rasterization backend) and `@mediabunny/server` (node-av
@@ -38,9 +38,9 @@ construction. Setup installs the skia backend, sets the global rendering flag,
 and registers Node-safe defaults.
 
 ```ts
-import "@konva-motion/renderer/register"; // sugar === setupServerRendering()
+import "@smoove/renderer/register"; // sugar === setupServerRendering()
 // or:
-import { setupServerRendering } from "@konva-motion/renderer";
+import { setupServerRendering } from "@smoove/renderer";
 setupServerRendering({ fonts: ["./Inter.ttf"] }); // idempotent
 ```
 
@@ -130,7 +130,7 @@ const png = await renderStill(comp, { frame: 30, output: "thumb.png", type: "png
 - **`loadImageNode(src)`** — the skia-canvas image loader.
 - **`registerServerMedia()`** — register `@mediabunny/server` (idempotent;
   `setupServerRendering` calls it).
-- **`import "@konva-motion/renderer/register"`** — `setupServerRendering()` at
+- **`import "@smoove/renderer/register"`** — `setupServerRendering()` at
   import time.
 
 ## Quality presets
@@ -182,7 +182,7 @@ paths or a `{ family: paths }` record.
 
 ## Core changes this package depends on
 
-- A globally-overridable default source/loader registry in `@konva-motion/core`
+- A globally-overridable default source/loader registry in `@smoove/core`
   (`setDefaultVideoSourceFactory` / `setDefaultAudioSourceFactory` /
   `setDefaultImageLoader`) so Node-safe sources can replace the browser ones
   before comps are built.

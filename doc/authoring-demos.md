@@ -17,7 +17,7 @@ sync or async — also works; the player's `resolveComposition` unwraps it).
 
 ```ts
 // packages/docs/src/demos/<name>.ts
-import { Composition, Rect, Sequence } from "@konva-motion/core";
+import { Composition, Rect, Sequence } from "@smoove/core";
 
 const comp = new Composition({
   id: "<name>",

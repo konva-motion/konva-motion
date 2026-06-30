@@ -18,7 +18,7 @@ pnpm install
 | `pnpm build`              | Build all `packages/*` (tsc to `dist/`)            |
 | `pnpm check`              | Biome lint + format check across the whole repo    |
 | `pnpm format`             | Biome auto-format                                  |
-| `pnpm --filter @konva-motion/timeline dev` | tsc watch for one package         |
+| `pnpm --filter @smoove/timeline dev` | tsc watch for one package         |
 
 ## Layout
 

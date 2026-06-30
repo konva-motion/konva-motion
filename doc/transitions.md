@@ -1,6 +1,6 @@
-# `@konva-motion/transitions`
+# `@smoove/transitions`
 
-Remotion-style transitions for konva-motion. Chain scenes that **overlap** while
+Remotion-style transitions for smoove. Chain scenes that **overlap** while
 a transition plays — a geometric move (slide, wipe, iris…) or a WebGL shader
 (dissolve, crosswarp, swap…). Built on the same offset engine as core's
 [`Series`](./README.md#new-seriesopts).
@@ -11,7 +11,7 @@ Presentation      — how a transition looks (Tier A geometric · Tier B shader)
 Timing            — how progress moves over the overlap (linear · spring)
 ```
 
-Install: it's a workspace package. `@konva-motion/core` and `konva` are peer
+Install: it's a workspace package. `@smoove/core` and `konva` are peer
 deps.
 
 ```ts
@@ -20,14 +20,14 @@ import {
   slide,
   dissolve,
   linearTiming,
-} from "@konva-motion/transitions";
+} from "@smoove/transitions";
 ```
 
 ## Quick example
 
 ```ts
-import { Composition } from "@konva-motion/core";
-import { TransitionSeries, slide, dissolve, linearTiming } from "@konva-motion/transitions";
+import { Composition } from "@smoove/core";
+import { TransitionSeries, slide, dissolve, linearTiming } from "@smoove/transitions";
 import Konva from "konva";
 
 const comp = new Composition({ id: "demo", fps: 30, durationInFrames: 180, width: 1280, height: 720 });
@@ -35,7 +35,7 @@ const comp = new Composition({ id: "demo", fps: 30, durationInFrames: 180, width
 // 4 scenes × 60f − 3 transitions × 20f = 180 frames.
 const series = new TransitionSeries({ composition: comp });
 
-const scene = (fill: string) => (seq: import("@konva-motion/core").Sequence) =>
+const scene = (fill: string) => (seq: import("@smoove/core").Sequence) =>
   seq.add(new Konva.Rect({ x: 0, y: 0, width: 1280, height: 720, fill }));
 
 series.scene({ durationInFrames: 60 }, scene("#0d1117"));
@@ -60,7 +60,7 @@ comp.add(series); // adds every scene + GL overlay layer the series yields
 - `opts.composition: Composition` — **required**. Spring timings resolve their
   length from `fps`, and presentations are sized from the stage
   `width`/`height`, so the composition is passed up front. (Remotion reads these
-  from React context; konva-motion is imperative.)
+  from React context; smoove is imperative.)
 - `opts.from?: number` — frame the series starts at (default `0`).
 
 Methods:
@@ -94,7 +94,7 @@ Linear (optionally eased) progress over a fixed frame count. `easing` accepts
 core's [`Easing`](./README.md#easing).
 
 ```ts
-import { Easing } from "@konva-motion/core";
+import { Easing } from "@smoove/core";
 linearTiming({ durationInFrames: 15, easing: Easing.inOut(Easing.cubic) });
 ```
 
@@ -168,8 +168,8 @@ optional [`gl`](https://github.com/stackgl/headless-gl) (headless-gl) package an
 import the GL wiring once, **before** building any `TransitionSeries`:
 
 ```ts
-import "@konva-motion/renderer/register"; // skia backend + factories
-import "@konva-motion/renderer/gl";        // route Tier B through headless-gl
+import "@smoove/renderer/register"; // skia backend + factories
+import "@smoove/renderer/gl";        // route Tier B through headless-gl
 ```
 
 This installs a headless-gl + skia compositor (`setCompositorFactory`): the

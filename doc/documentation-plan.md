@@ -1,4 +1,4 @@
-# konva-motion Documentation Plan
+# smoove Documentation Plan
 
 Tutorial-focused docs ("how to" + "when"), not an API reference. Built on the
 existing Fumadocs + React Router site in `packages/docs`, with live previews via
@@ -70,7 +70,7 @@ These are the recommended-way principles. Define each once on a short
 the relevant one as a `<Callout>` on the pages where it bites. Frame them as
 *recommended*, not *required* — most have a working escape hatch.
 
-- **Prefer konva-motion wrappers over raw `Konva.*`.** `Rect`/`Circle`/`Text`/
+- **Prefer smoove wrappers over raw `Konva.*`.** `Rect`/`Circle`/`Text`/
   `Image`/… from core extend their Konva equivalents *and* add full flex
   participation. NOTE (verified against `layout/flex/flex.ts`): a raw
   `Konva.Rect`/`Text`/`Image` with a fixed numeric size **is** measured and
@@ -80,7 +80,7 @@ the relevant one as a `<Callout>` on the pages where it bites. Frame them as
   (`flexGrow`/`flexShrink`/`flexBasis`/`alignSelf`), nested `Flex`/`Block`
   containers, or the rich `Text` (fit/highlights/typewriter) / `Image`
   (objectFit) / `Block` (background/border/shadow) features. Rule of thumb:
-  import the drawing vocabulary from `@konva-motion/core`, reach for `Konva.*`
+  import the drawing vocabulary from `@smoove/core`, reach for `Konva.*`
   only for something core doesn't wrap yet. *(Not never, just not the default.)*
 - **Animate as a function of frame.** Drive attributes from `localFrame` via
   `seq.register()` + `interpolate()`/`Easing`. Never `setInterval`,
@@ -151,14 +151,14 @@ block                 (split — "box")
 video                 (new)
 audio                 (new)
 ---Transitions---
-transitions-setup     (new)   ← install @konva-motion/transitions (why + how)
+transitions-setup     (new)   ← install @smoove/transitions (why + how)
 transitions           (new)
 ---Player---
-player-setup          (new)   ← install @konva-motion/player (npm + CDN/standalone)
+player-setup          (new)   ← install @smoove/player (npm + CDN/standalone)
 player                (rewrite/expand)
 ---Rendering---
-rendering-setup       (new)   ← install @konva-motion/renderer (native reqs, ./gl)
-rendering             (new)   ← headless MP4 export via @konva-motion/renderer
+rendering-setup       (new)   ← install @smoove/renderer (native reqs, ./gl)
+rendering             (new)   ← headless MP4 export via @smoove/renderer
 rendering-media       (new)   ← server-side assets, fonts, shader transitions (./gl)
 ---Studio---  (Preview)
 studio-overview       (new)
@@ -217,7 +217,7 @@ Pages: `introduction`, `installation`, `core-concepts`, `best-practices`.
       over `[from, from+duration)`); when to reach for it vs plain Konva /
       single CSS tween; `hero` live demo. *Next-steps links repointed to
       installation/core-concepts/best-practices (dropped the `components` link).*
-- [x] **installation** — `npm install konva @konva-motion/core`; konva-as-peer
+- [x] **installation** — `npm install konva @smoove/core`; konva-as-peer
       Callout; **rewritten** first composition (`Composition` + `Sequence` +
       `register` + `interpolate`); mount via `setContainer` + `play()`; `<Steps>`
       walkthrough rebuilt around the real API. The `first-tween` demo IS the page
@@ -272,7 +272,7 @@ Pages: `interpolation`, `easing`, `sequencing`.
       Started in `content/docs/meta.json`.
 
 Verified facts / corrections caught while building:
-- `Easing.in(fn)` is an **identity no-op** in konva-motion (a bare preset already
+- `Easing.in(fn)` is an **identity no-op** in smoove (a bare preset already
   eases in) — documented as such; reach for `out`/`inOut` to change the shape.
 - `interpolateColors(input, inputRange, outputRange)` takes **no options arg** and
   **always clamps** both ends (unlike `interpolate`). Documented as a Callout.
@@ -409,10 +409,10 @@ Page: `transitions`.
       run at `fps: 60`, loop, core wrappers only; each is a `TransitionSeries`
       whose composition `durationInFrames` equals the net (Σ scenes − Σ
       transitions) so the loop is seamless.*
-- [x] Dep + nav: added `@konva-motion/transitions` as a `workspace:*` dependency
-      of `@konva-motion/docs` (it was missing); inserted `---Transitions---` +
+- [x] Dep + nav: added `@smoove/transitions` as a `workspace:*` dependency
+      of `@smoove/docs` (it was missing); inserted `---Transitions---` +
       `transitions` between Media and Player in `content/docs/meta.json`.
-- [x] Verified: `pnpm build` (root) and `pnpm --filter @konva-motion/docs build`
+- [x] Verified: `pnpm build` (root) and `pnpm --filter @smoove/docs build`
       pass; `/docs/transitions` serves 200 and renders with the new nav group;
       all three players load (correct scene/canvas counts 3/3/2), no errors
       beyond the benign multi-Konva dev warning. Stepped through each transition
@@ -424,7 +424,7 @@ Verified facts / corrections caught while building:
   (a WebGL2 fragment shader). The page lists it with the shader set. Confirmed
   geometric (Tier A) set is exactly: `fade`, `slide`, `wipe`, `clockWipe`,
   `iris`, `flip`, `none` (`presentations/index.ts:1-8`).
-- **`@konva-motion/transitions` was not a docs dependency.** The demos import it,
+- **`@smoove/transitions` was not a docs dependency.** The demos import it,
   so it had to be added to `packages/docs/package.json` (`workspace:*`) before the
   page would build. The package was already built (`dist/` present).
 - **`TransitionSeries` requires the composition up front** (`{composition, from?}`)
@@ -471,7 +471,7 @@ Page: `player` (rewrite/expand).
       `<smoove-player>` (drops the `controls` attr and the View-source toggle).
       Extended the ambient JSX typing (`src/smoove-player.d.ts`) with all the
       control-element tags so the MDX type-checks.
-- [x] Verified: docs `pnpm --filter @konva-motion/docs build` passes; `/docs/player`
+- [x] Verified: docs `pnpm --filter @smoove/docs build` passes; `/docs/player`
       serves 200 and both players mount independent compositions and paint (orbit
       `#ffd166` core, the custom-controls scene's puck); the custom bar upgrades
       with all six controls + the overlay play button in order; only the benign
@@ -500,7 +500,7 @@ Verified facts / corrections caught while building:
 - **Player uses light DOM**, so controls render into light DOM (no shadow root) and
   the opt-in `styles.css` (loaded globally in docs `root.tsx`) styles them.
 - **CDN note:** jsdelivr/unpkg resolve files by path, so the inline `<script>` loads
-  `…/dist/player.global.js` directly; the `@konva-motion/player/standalone` export
+  `…/dist/player.global.js` directly; the `@smoove/player/standalone` export
   subpath is for bundler resolution, mentioned separately.
 - Pre-existing, out of scope: `pnpm typecheck` (`tsc -b`) fails on Step 6's
   `transition-fade.ts` (and siblings) under `noUncheckedIndexedAccess` for
@@ -510,7 +510,7 @@ Verified facts / corrections caught while building:
 ## Step 8 — Rendering ✅ DONE
 
 Pages: `rendering`, `rendering-media`. (`rendering-setup` already exists, authored
-in the post-Step-7 setup-page split: it carries the `@konva-motion/renderer`
+in the post-Step-7 setup-page split: it carries the `@smoove/renderer`
 install, native requirements, the `/register` import, and the optional `gl` shader
 path. Step 8's pages link back to it and focus on the API, not install.) The
 renderer is Node/headless and **API-only (no CLI)** — these pages use annotated
@@ -519,7 +519,7 @@ code blocks, not `<smoove-player>` previews. *Result `<video>` embeds were skipp
 mean committing a binary; the headless nature is conveyed in prose instead.*
 
 - [x] **rendering** — "your composition → MP4 file." `import
-      "@konva-motion/renderer/register"` (= `setupServerRendering()` at import)
+      "@smoove/renderer/register"` (= `setupServerRendering()` at import)
       before building the comp; `renderComposition(comp, {output, fps,
       resolution, fit, quality, range, mute, onProgress, signal, fonts,
       ffmpegPath})` (options table); quality presets table
@@ -530,18 +530,18 @@ mean committing a binary; the headless nature is conveyed in prose instead.*
       raw frames with the `renderFrames()` async generator + a one-line
       `renderToStream` mention. No-CLI Callout (run a `.ts` with `npx tsx`).
 - [x] **rendering-media** — server-side assets & advanced: the
-      `@konva-motion/vite` `konvaMotion({serverAssets})` import rewrite (Vite URL
+      `@smoove/vite` `smoove({serverAssets})` import rewrite (Vite URL
       → fs path in the SSR build) so media comps render headlessly **(NOT a
       `mediaSrc` helper — see correction below)**; font registration
       (`registerFonts` + the `fonts` option, why: no DOM `@font-face`); how audio
       is collected + muxed (`collectAudioTrack`, ffmpeg `amix`, `mute`, master
       mixer carry-through); `setupServerRendering({videoDecodeCap})` for memory;
       custom `video` source factory; shader (Tier B) transitions via `import
-      "@konva-motion/renderer/gl"` + the optional `gl` dep and `fade()` fallback.
+      "@smoove/renderer/gl"` + the optional `gl` dep and `fade()` fallback.
 - [x] No live demos — annotated `ts`/`bash` code blocks only.
 - [x] Nav: appended `rendering` + `rendering-media` after `rendering-setup` in the
       `---Rendering---` group in `content/docs/meta.json`.
-- [x] Verified: `pnpm --filter @konva-motion/docs build` passes;
+- [x] Verified: `pnpm --filter @smoove/docs build` passes;
       `/docs/rendering`, `/docs/rendering-media`, `/docs/rendering-setup` all serve
       200 and render with the new nav group (all three slugs present), every
       section heading, the three rendering tables, the `#quality-presets` anchor,
@@ -552,7 +552,7 @@ Verified facts / corrections caught while building:
 - **No `mediaSrc` helper exists.** The plan named a `mediaSrc` asset-URL helper
   (Vite URL → fs path); `grep` finds no such export anywhere and the old
   `demo/src/media-src.ts` was deleted. The behavior now lives in the
-  `@konva-motion/vite` plugin (`packages/vite/src/index.ts`): `konvaMotion({
+  `@smoove/vite` plugin (`packages/vite/src/index.ts`): `smoove({
   serverAssets })` is a `load` hook (`enforce: "pre"`) that rewrites media/image
   imports to an absolute fs path **in the SSR build only** (client keeps the URL),
   so `new Video({ src: clip })` works in both preview and render with no per-`src`
@@ -590,7 +590,7 @@ Pages: `studio-overview`, `studio-setup`, `studio-interface`,
       `useComposition`, `useSignalValue`, `usePlayback`, `useShortcuts`).
 - [ ] **studio-rendering** — `Studio.RenderDialog`, `Studio.ExportFrameDialog`,
       `Studio.RenderQueue`; render backend prop; how the in-app render queue
-      submits to `@konva-motion/renderer` (link back to the Rendering section).
+      submits to `@smoove/renderer` (link back to the Rendering section).
 - [ ] Assets: Studio is React (not a `<smoove-player>` composition) — use static
       screenshots for v1; revisit live React embed/iframe of demo2 later.
 
