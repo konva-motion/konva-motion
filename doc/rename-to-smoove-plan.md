@@ -576,12 +576,21 @@ Convert the existing KmStudio look to the Smoove system (`@smoove/docs`):
   mark in a gradient *chip* (white bars on a coral→mint tile); revised to show the
   **official colored mark directly** per the Lockup spec ("gradient mark +
   wordmark"). `BrandMark` (`components/icons.tsx`) gained a `gradient` prop that
-  injects the inline `<linearGradient id="smoove-mark-grad">` (coral `#FF5640` →
-  mint `#15CDA8`, `gradientUnits="userSpaceOnUse"`, matches `smoove-mark.svg`) and
-  strokes the bars with it; the sunshine dot stays `#FFC23C`. Default stays
-  `currentColor` (e.g. `demo.tsx` keeps it). Applied `gradient` in all three
-  lockups: home header (`brand.tsx`), footer (`home.tsx`), docs navbar (`Logo` in
+  injects an inline `<linearGradient>` (coral `#FF5640` → mint `#15CDA8`,
+  `gradientUnits="userSpaceOnUse"`, matches `smoove-mark.svg`) and strokes the
+  bars with it; the sunshine dot stays `#FFC23C`. Default stays `currentColor`
+  (e.g. `demo.tsx` keeps it). Applied `gradient` in all three lockups: home
+  header (`brand.tsx`), footer (`home.tsx`), docs navbar (`Logo` in
   `lib/layout.shared.tsx`).
+- ⚠️ **Invisible-logo bug fixed (gradient id collision).** First cut used a
+  **hardcoded** `id="smoove-mark-grad"`; the lockup renders several marks per page
+  (home header + footer), so the page had **duplicate `id`s** (invalid) and a
+  `url(#smoove-mark-grad)` paint reference that can resolve to a duplicate/
+  unmounted def — an **invisible stroke** (surfaced in the docs). Fix: the
+  gradient id is now **per-instance via React `useId()`**, so every mark
+  references its own def. Verified: home emits unique ids (no duplicates) and the
+  docs-navbar mark's `url(#…)` resolves to a present def; marks render light +
+  dark.
 - **Lockup sizing verified against the design size ladder** (`Smoove
   Lockup.dc.html`): mark box ≈ **1.6× the wordmark font-size**, gap ≈ 0.4× (XL
   54px word→84px mark/18 gap; M 21→34/9; S 14→22/7). So home (16px wordmark) →
