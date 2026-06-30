@@ -460,7 +460,7 @@ dark, and light variants each keep the sunshine dot.
 - ⏳ Still pending from Group A: the working-folder rename `konva-motion/` →
   `smoove/` (Phase 4, must be done out-of-session) — unrelated to Phase 5.
 
-## Phase 6 — Brand fonts
+## Phase 6 — Brand fonts ✅ DONE (2026-06-30)
 
 - Wire the three faces in where text renders: **Comfortaa** (display/wordmark),
   **Hanken Grotesk** (body/UI), **JetBrains Mono** (code) — docs first, then
@@ -472,6 +472,68 @@ dark, and light variants each keep the sunshine dot.
 
 **Verify:** docs + demo show Comfortaa headings, Hanken body, mono code blocks;
 no FOUT regressions; SSR render (if applicable) embeds the faces.
+
+**Status / notes:**
+
+- **Starting state (key finding):** Hanken Grotesk + JetBrains Mono were
+  **already** wired — both `<link>`'d in the docs (`packages/docs/src/root.tsx`)
+  and demo (`demo/src/root.tsx`) Google-Fonts URLs, applied as the docs body
+  (`base.css`) / studio `--font-sans` and the `…Mono` code stack. The only
+  missing face was **Comfortaa** (display/wordmark), plus the player chrome was
+  on bare `system-ui` / `ui-monospace`. So Phase 6 = add Comfortaa + apply the
+  display face + wire the player chrome stacks. No palette/surface changes (that
+  stays Phase 7/8) — the docs are still on the old violet KmStudio look here.
+- **Google Fonts URL** (`Comfortaa:wght@400;500;600;700` prepended,
+  `display=swap` kept) added to **both** `packages/docs/src/root.tsx` and
+  `demo/src/root.tsx`. Used the explicit semicolon weight list to match the
+  existing Hanken/JetBrains entries (variable-font `wght@400..700` range syntax
+  also works; chose consistency).
+- **Docs** (`packages/docs/src/styles/base.css`): declared one theme-independent
+  token `--font-display: "Comfortaa", system-ui, sans-serif;` in `:root` (outside
+  the light/dark blocks), applied it via a global `h1–h6 { font-family:
+  var(--font-display) }` rule (covers the homepage hero `h1` **and** all Fumadocs
+  MDX content headings — an explicit element rule beats the inherited Hanken from
+  `body`), and set `.brand__word` (the header wordmark, renders "Smoove") to the
+  display face.
+- **Studio** (`packages/studio/src/studio.css` + `components/brand/brand.tsx`):
+  added `--font-display` to the Tailwind v4 `@theme` block (which auto-generates
+  a `font-display` utility — confirmed `.font-display{font-family:var(--font-display)}`
+  in compiled `dist/styles/studio.css`), then put the `font-display` class on the
+  "SmooveStudio" wordmark `<div>`. Body/UI stays `--font-sans` (Hanken), data
+  stays `--font-mono` (JetBrains).
+- **Player** (`packages/player/src/player.css`): wired the brand stacks into the
+  chrome — control bar `system-ui` → `"Hanken Grotesk", system-ui, sans-serif`;
+  time readout `ui-monospace` → `"JetBrains Mono", ui-monospace, monospace`. The
+  player **does not load fonts itself** (it's headless/light-DOM by design); it
+  inherits the faces from the host page (docs already `<link>`s all three), and
+  falls back cleanly where the host hasn't loaded them. Color/surface repaint of
+  the player is still **Phase 8**.
+- **SSR / `@smoove/google-fonts`: no changes needed.** The package is a
+  module-per-family registry (no allowlist) and **already** ships modules for all
+  three faces — `@smoove/google-fonts/{comfortaa,hanken-grotesk,jetbrains-mono}`.
+  A composition that wants one of these *inside the canvas* just imports the
+  module and `seq.add(font)` (it's buffered + skia-loaded automatically); the
+  three faces above are **chrome/HTML** fonts (loaded by the host `<link>`),
+  which is a separate concern from canvas-text SSR. So nothing to register.
+- **Guard held:** bare `konva` / `Konva` untouched; no shared token module
+  introduced (per-package values inlined — `--font-display` declared separately
+  in docs `base.css` and studio `@theme`).
+- ✅ **Verified:** `pnpm build` green (exit 0) across all packages incl. player's
+  Vite build + the studio Tailwind CSS step; compiled output confirms the wiring
+  (Comfortaa in studio `--font-display` + the `.font-display` utility; Hanken +
+  JetBrains stacks in `player.css`). Browser smoke (`pnpm dev`, demo2): computed
+  styles resolve **wordmark → `Comfortaa, system-ui, sans-serif`**, **studio body
+  → Hanken Grotesk**, **code → JetBrains Mono**; headings → Comfortaa. **Zero
+  console errors.** ⚠️ The sandbox has **no network to `fonts.gstatic.com`**, so
+  the actual woff2s don't download (`document.fonts.check('16px Comfortaa')` is
+  `false`) and the rounded glyphs fall back to system-ui in the screenshot — the
+  *wiring* is correct; the glyph render needs a networked environment. `display=swap`
+  means the fallback is FOUT-free either way.
+- ⚠️ Port gotcha persists (demo Vite pinned `:5174`, preview harness drives
+  `:5173`): temporarily set the port to `:5173` to verify in-browser and
+  **restored it to `:5174`** afterward.
+- ⏳ Still pending from Group A: the working-folder rename `konva-motion/` →
+  `smoove/` (Phase 4, must be done out-of-session) — unrelated to Phase 6.
 
 ## Phase 7 — Docs site repaint
 
